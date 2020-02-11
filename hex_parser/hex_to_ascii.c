@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include "../master_header/universal.h"
 
 #define IN true
 #define OUT false
@@ -26,6 +27,9 @@ int main(int argc, const char* argv[]){
   for(int i = 0; i < 17; ++i){
     parse(i, output);
   }
+  fclose(output);
+  output = fopen("hex_output", "r");
+  cat(output, stdout);
   fclose(output);
   return 0;
 }
