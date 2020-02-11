@@ -34,7 +34,6 @@ char* look_up(int index, int indexes[], char* labels[]){
   bool state = IN;
   for(int i = 0; i < LABEL_COUNT; ++i){
     if(indexes[i] == index){ 
-      fprintf(stdout, "breaking with i: %d -----> index: %d\n", i, index);
       index = i;
       state = OUT;
       break; 
