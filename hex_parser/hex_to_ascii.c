@@ -7,29 +7,19 @@
 #define IN true
 #define OUT false
 
-void parse(int value, FILE* out){
-  const char table[] = {'A', 'B', 'C', 'D', 'E', 'F'};
+char hex_parser(int value){
   int base = 10;
+  int index = (value - base)-1;
 
   if(value >= 10 && value <= 16){
-    int index = (value - base)-1;
-    if(index >= 0){  
-      fprintf(out, "%c\n", table[index]);
-    }
+    return (index >= 0) ? (char)(index+65) : '\0';
   }
-  else{
-    fprintf(out, "%d\n", value);
-  }
+  return (char)(value+48);
 }
 
 int main(int argc, const char* argv[]){
-  FILE* output = fopen("hex_output", "w");
   for(int i = 0; i < 17; ++i){
-    parse(i, output);
+    fprintf(stdout, "%c\n", hex_parser(i));
   }
-  fclose(output);
-  output = fopen("hex_output", "r");
-  cat(output, stdout);
-  fclose(output);
   return 0;
 }

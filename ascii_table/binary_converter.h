@@ -86,6 +86,13 @@ void print_level(FILE* output, char c, size_t level){
   fputc('\n', output);
 }
 
+void print_int_array(int array[]){
+  for(int i = 0; i < BINARY_LEN; ++i){
+    fprintf(stdout, "%d", array[i]);
+  }
+  fprintf(stdout, "\n");
+}
+
 void process_file(FILE* input, FILE* output){
   char c;
   bool state = OUT;
@@ -107,5 +114,14 @@ void process_file(FILE* input, FILE* output){
     else{
      array[i++] = atoi(&c);
     }
+  }
+}
+
+void generate_binary(FILE* destination, int s, int e){
+  for(int j = s; j <= e; ++j){
+    for(int i = 0; i < 8; ++i){
+      fprintf(destination, "%d", !!((j << i) & 0x80));
+    }
+    fputc(' ', destination);
   }
 }
