@@ -15,14 +15,15 @@ struct message{
 
 struct message* new_message(){
   struct message *m = (struct message*)malloc(sizeof(struct message));
-  struct tm* time_info;
   time_t rt;
   time(&rt);
-  time_info = localtime(&rt);
-  m->time_ = time_info;
+  m->time_ = localtime(&rt);
   return m;
 }
 
+void set_function_message(struct message* packet, const char* m){
+  packet->function_message = m;
+}
 void set_message(struct message* packet, const char* m){
   packet->content = m;
 }
@@ -44,7 +45,9 @@ void print_log(FILE* out, struct message* m, char s){
  // out <- file to print to
  // m <- message packet
  // s <- separator for time format
- fprintf(out, "[%d%c%d%c%d]\n", 
+ fprintf(out, "[Time: %d:%d]\n",
+          m->time_->tm_hour, m->time_->tm_min);
+ fprintf(out, "[Date: %d%c%d%c%d]\n", 
           m->time_->tm_mon, s, m->time_->tm_mday, s, 1900+m->time_->tm_year);
  fprintf(out, "[LN: %zu]\n", m->line_number);
  fprintf(out, "[FN: %s]\n", m->function_message);
@@ -64,13 +67,15 @@ bool close_file(FILE* file_to_close){
   return false;
 }
 
-void read_log(FILE* output){
-  /*fprintf(output, "")*/
-}
 int main(int argc, const char* argv[]){
   struct message* n = new_message();
-  /*print_time(stdout, n);*/
-  print_log(stdout, n, '|');
+  set_severity(n, high);
+  set_line_number(n, 12);
+  set_function_message(n, "void set_fire()");
+  set_message(n, "The house is currently on fire!");
+  FILE* output = fopen("example.log", "w");
+  print_log(output, n, '-');
   free(n);
+  fclose(output);
   return 0;
 }
