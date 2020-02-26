@@ -125,3 +125,23 @@ void generate_binary(FILE* destination, int s, int e){
     fputc(' ', destination);
   }
 }
+
+int value(char c){
+  if(c >= '0' && c <= '9'){ return (int)c - '0'; }
+  return (int)c - 'A' + 10;
+}
+
+int to_base_n(char* string, int base){
+  size_t len = strlen(string);
+  int power = 1;
+  int number = 0;
+  for(int i = (len - 1); i >=0 ; --i){
+    if(value(string[i]) >= base){
+      fprintf(stderr, "Invalid number!\n");
+      return -1;
+    }
+    number+=value(string[i])*power;
+    power = power*base;
+  }
+  return number;
+}
