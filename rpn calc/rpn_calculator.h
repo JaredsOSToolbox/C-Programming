@@ -80,7 +80,4 @@ void rpn_calc(int operand_code){
       fprintf(stderr, "got an error with op_code %d\n", operand_code);
       break;
   }
-  //if(operand_code != POP){
-    //fprintf(stdout, "\t%.8g\n", pop());
-  //}
 }
