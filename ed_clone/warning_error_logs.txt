@@ -1,206 +1,197 @@
-ed_manip.c:191:16: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:190:16: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
                 while (*p2++ = *p1++){}
                        ~~~~~~^~~~~~~
-ed_manip.c:191:16: note: place parentheses around the assignment to silence this warning
+ed_manip.c:190:16: note: place parentheses around the assignment to silence this warning
                 while (*p2++ = *p1++){}
                              ^
                        (            )
-ed_manip.c:191:16: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:190:16: note: use '==' to turn this assignment into an equality comparison
                 while (*p2++ = *p1++){}
                              ^
                              ==
-ed_manip.c:196:16: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:195:16: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
                 while (*p2++ = *p1++)
                        ~~~~~~^~~~~~~
-ed_manip.c:196:16: note: place parentheses around the assignment to silence this warning
+ed_manip.c:195:16: note: place parentheses around the assignment to silence this warning
                 while (*p2++ = *p1++)
                              ^
                        (            )
-ed_manip.c:196:16: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:195:16: note: use '==' to turn this assignment into an equality comparison
                 while (*p2++ = *p1++)
                              ^
                              ==
-ed_manip.c:202:9: warning: incompatible integer to pointer conversion assigning to 'char *' from 'int' [-Wint-conversion]
+ed_manip.c:201:9: warning: incompatible integer to pointer conversion assigning to 'char *' from 'int' [-Wint-conversion]
         tfname = mkstemp("/tmp/ed_temp_file.txt");
                ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ed_manip.c:358:13: warning: implicit declaration of function 'open' is invalid in C99 [-Wimplicit-function-declaration]
-                if ((io = open(file, 0)) < 0) {
-                          ^
-ed_manip.c:405:7: warning: implicit declaration of function 'lseek' is invalid in C99 [-Wimplicit-function-declaration]
-                  ((lseek(io, 0L, 2)) == -1))
-                    ^
-ed_manip.c:406:14: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
-                        if ((io = creat(file, 0666)) < 0)
-                                  ^
-ed_manip.c:605:16: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:378:16: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
                 while (*p2++ = *p1++)
                        ~~~~~~^~~~~~~
-ed_manip.c:605:16: note: place parentheses around the assignment to silence this warning
+ed_manip.c:378:16: note: place parentheses around the assignment to silence this warning
                 while (*p2++ = *p1++)
                              ^
                        (            )
-ed_manip.c:605:16: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:378:16: note: use '==' to turn this assignment into an equality comparison
                 while (*p2++ = *p1++)
                              ^
                              ==
-ed_manip.c:625:16: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:398:16: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
                 while (*p1++ = *p2++)
                        ~~~~~~^~~~~~~
-ed_manip.c:625:16: note: place parentheses around the assignment to silence this warning
+ed_manip.c:398:16: note: place parentheses around the assignment to silence this warning
                 while (*p1++ = *p2++)
                              ^
                        (            )
-ed_manip.c:625:16: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:398:16: note: use '==' to turn this assignment into an equality comparison
                 while (*p1++ = *p2++)
                              ^
                              ==
-ed_manip.c:632:2: warning: implicit declaration of function 'close' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:405:2: warning: implicit declaration of function 'close' is invalid in C99 [-Wimplicit-function-declaration]
         close(io);
         ^
-ed_manip.c:655:8: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:428:8: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
                 io = creat("ed.hup", 0600);
                      ^
-ed_manip.c:673:2: warning: implicit declaration of function 'lseek' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:446:2: warning: implicit declaration of function 'lseek' is invalid in C99 [-Wimplicit-function-declaration]
         lseek(0, (long)0, 2);
         ^
-ed_manip.c:683:3: warning: implicit declaration of function 'close' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:456:3: warning: implicit declaration of function 'close' is invalid in C99 [-Wimplicit-function-declaration]
                 close(io);
                 ^
-ed_manip.c:692:11: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:465:11: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         if (lastc=peekc) {
             ~~~~~^~~~~~
-ed_manip.c:692:11: note: place parentheses around the assignment to silence this warning
+ed_manip.c:465:11: note: place parentheses around the assignment to silence this warning
         if (lastc=peekc) {
                  ^
             (          )
-ed_manip.c:692:11: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:465:11: note: use '==' to turn this assignment into an equality comparison
         if (lastc=peekc) {
                  ^
                  ==
-ed_manip.c:712:9: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:485:9: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         if (rc = gety())
             ~~~^~~~~~~~
-ed_manip.c:712:9: note: place parentheses around the assignment to silence this warning
+ed_manip.c:485:9: note: place parentheses around the assignment to silence this warning
         if (rc = gety())
                ^
             (          )
-ed_manip.c:712:9: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:485:9: note: use '==' to turn this assignment into an equality comparison
         if (rc = gety())
                ^
                ==
-ed_manip.c:758:5: warning: add explicit braces to avoid dangling else [-Wdangling-else]
+ed_manip.c:531:5: warning: add explicit braces to avoid dangling else [-Wdangling-else]
                                 else return(EOF);
                                 ^
-ed_manip.c:866:13: warning: implicit declaration of function 'fork' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:639:13: warning: implicit declaration of function 'fork' is invalid in C99 [-Wimplicit-function-declaration]
         if ((pid = fork()) == 0) {
                    ^
-ed_manip.c:869:3: warning: implicit declaration of function 'execl' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:642:3: warning: implicit declaration of function 'execl' is invalid in C99 [-Wimplicit-function-declaration]
                 execl("/bin/sh", "sh", "-t", 0);
                 ^
-ed_manip.c:873:17: warning: implicit declaration of function 'wait' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:646:17: warning: implicit declaration of function 'wait' is invalid in C99 [-Wimplicit-function-declaration]
         while ((rpid = wait(&retcode)) != pid && rpid != -1)
                        ^
-ed_manip.c:887:2: warning: implicit declaration of function 'unlink' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:660:2: warning: implicit declaration of function 'unlink' is invalid in C99 [-Wimplicit-function-declaration]
         unlink(tfname);
         ^
-ed_manip.c:940:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:713:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*lp++ = *bp++)
                ~~~~~~^~~~~~~
-ed_manip.c:940:15: note: place parentheses around the assignment to silence this warning
+ed_manip.c:713:15: note: place parentheses around the assignment to silence this warning
         while (*lp++ = *bp++)
                      ^
                (            )
-ed_manip.c:940:15: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:713:15: note: use '==' to turn this assignment into an equality comparison
         while (*lp++ = *bp++)
                      ^
                      ==
-ed_manip.c:960:13: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:733:13: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*bp = *lp++) {
                ~~~~^~~~~~~
-ed_manip.c:960:13: note: place parentheses around the assignment to silence this warning
+ed_manip.c:733:13: note: place parentheses around the assignment to silence this warning
         while (*bp = *lp++) {
                    ^
                (          )
-ed_manip.c:960:13: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:733:13: note: use '==' to turn this assignment into an equality comparison
         while (*bp = *lp++) {
                    ^
                    ==
-ed_manip.c:1010:2: warning: implicit declaration of function 'lseek' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:783:2: warning: implicit declaration of function 'lseek' is invalid in C99 [-Wimplicit-function-declaration]
         lseek(tfile, (long)b*BLKSIZE, 0);
         ^
-ed_manip.c:1020:2: warning: implicit declaration of function 'close' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:793:2: warning: implicit declaration of function 'close' is invalid in C99 [-Wimplicit-function-declaration]
         close(tfile);
         ^
-ed_manip.c:1029:8: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:802:8: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
         close(creat(tfname, 0600));
               ^
-ed_manip.c:1030:10: warning: implicit declaration of function 'open' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:803:10: warning: implicit declaration of function 'open' is invalid in C99 [-Wimplicit-function-declaration]
         tfile = open(tfname, 2);
                 ^
-ed_manip.c:1097:14: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:870:14: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
                 while (*gp = *lp++)
                        ~~~~^~~~~~~
-ed_manip.c:1097:14: note: place parentheses around the assignment to silence this warning
+ed_manip.c:870:14: note: place parentheses around the assignment to silence this warning
                 while (*gp = *lp++)
                            ^
                        (          )
-ed_manip.c:1097:14: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:870:14: note: use '==' to turn this assignment into an equality comparison
                 while (*gp = *lp++)
                            ^
                            ==
-ed_manip.c:1103:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:876:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*lp++ = *gp++)
                ~~~~~~^~~~~~~
-ed_manip.c:1103:15: note: place parentheses around the assignment to silence this warning
+ed_manip.c:876:15: note: place parentheses around the assignment to silence this warning
         while (*lp++ = *gp++)
                      ^
                (            )
-ed_manip.c:1103:15: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:876:15: note: use '==' to turn this assignment into an equality comparison
         while (*lp++ = *gp++)
                      ^
                      ==
-ed_manip.c:1205:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:978:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*p1++ = *p2++)
                ~~~~~~^~~~~~~
-ed_manip.c:1205:15: note: place parentheses around the assignment to silence this warning
+ed_manip.c:978:15: note: place parentheses around the assignment to silence this warning
         while (*p1++ = *p2++)
                      ^
                (            )
-ed_manip.c:1205:15: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:978:15: note: use '==' to turn this assignment into an equality comparison
         while (*p1++ = *p2++)
                      ^
                      ==
-ed_manip.c:1221:11: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:994:11: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (c = *rp++&0377) {
                ~~^~~~~~~~~~~~
-ed_manip.c:1221:11: note: place parentheses around the assignment to silence this warning
+ed_manip.c:994:11: note: place parentheses around the assignment to silence this warning
         while (c = *rp++&0377) {
                  ^
                (             )
-ed_manip.c:1221:11: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:994:11: note: use '==' to turn this assignment into an equality comparison
         while (c = *rp++&0377) {
                  ^
                  ==
-ed_manip.c:1235:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:1008:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*sp++ = *lp++)
                ~~~~~~^~~~~~~
-ed_manip.c:1235:15: note: place parentheses around the assignment to silence this warning
+ed_manip.c:1008:15: note: place parentheses around the assignment to silence this warning
         while (*sp++ = *lp++)
                      ^
                (            )
-ed_manip.c:1235:15: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:1008:15: note: use '==' to turn this assignment into an equality comparison
         while (*sp++ = *lp++)
                      ^
                      ==
-ed_manip.c:1240:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:1013:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*lp++ = *sp++)
                ~~~~~~^~~~~~~
-ed_manip.c:1240:15: note: place parentheses around the assignment to silence this warning
+ed_manip.c:1013:15: note: place parentheses around the assignment to silence this warning
         while (*lp++ = *sp++)
                      ^
                (            )
-ed_manip.c:1240:15: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:1013:15: note: use '==' to turn this assignment into an equality comparison
         while (*lp++ = *sp++)
                      ^
                      ==
-31 warnings generated.
+28 warnings generated.

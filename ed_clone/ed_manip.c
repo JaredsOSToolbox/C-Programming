@@ -99,7 +99,6 @@ int backref(int i, char *lp);
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
 void callunix(void);
 int cclass(char *set, int c, int af);
-void commands(void);
 void compile(int eof);
 int compsub(void);
 void dosub(void);
@@ -205,238 +204,12 @@ int main(int argc, char *argv[]){
   if (oldintr!=SIG_IGN) {signal(SIGINT, onintr);}
   if (oldhup!=SIG_IGN) {signal(SIGHUP, onhup);}
   setjmp(savej);
-  commands();
+  /*commands();*/
   /*printf("goodbye from main!\n");*/
 	/*quit(0);*/
 	return 0;
 }
 
-void commands(void)
-{
-	unsigned int *a1;
-	int c;
-	int temp;
-	char lastsep;
-
-	for (;;) {
-	if (pflag) {
-		pflag = 0;
-		addr1 = addr2 = dot;
-		print();
-	}
-	c = '\n';
-	for (addr1 = 0;;) {
-		lastsep = c;
-		a1 = address();
-		c = getchr();
-		if (c!=',' && c!=';')
-			break;
-		if (lastsep==',')
-			error(Q);
-		if (a1==0) {
-			a1 = zero+1;
-			if (a1>dol)
-				a1--;
-		}
-		addr1 = a1;
-		if (c==';')
-			dot = a1;
-	}
-	if (lastsep!='\n' && a1==0)
-		a1 = dol;
-	if ((addr2=a1)==0) {
-		given = 0;
-		addr2 = dot;	
-	}
-	else
-		given = 1;
-	if (addr1==0)
-		addr1 = addr2;
-	switch(c) {
-
-	case 'a':
-		add(0);
-		continue;
-
-	case 'c':
-		nonzero();
-		newline();
-		rdelete(addr1, addr2);
-		append(gettty, addr1-1);
-		continue;
-
-	case 'd':
-		nonzero();
-		newline();
-		rdelete(addr1, addr2);
-		continue;
-
-	case 'E':
-		fchange = 0;
-		c = 'e';
-	case 'e':
-		setnoaddr();
-		if (vflag && fchange) {
-			fchange = 0;
-			error(Q);
-		}
-		filename(c);
-		init();
-		addr2 = zero;
-		goto caseread;
-
-	case 'f':
-		setnoaddr();
-		filename(c);
-		puts(savedfile);
-		continue;
-
-	case 'g':
-		global(1);
-		continue;
-
-	case 'i':
-		add(-1);
-		continue;
-
-
-	case 'j':
-		if (!given)
-			addr2++;
-		newline();
-		join();
-		continue;
-
-	case 'k':
-		nonzero();
-		if ((c = getchr()) < 'a' || c > 'z')
-			error(Q);
-		newline();
-		names[c-'a'] = *addr2 & ~01;
-		anymarks |= 01;
-		continue;
-
-	case 'm':
-		move(0);
-		continue;
-
-	case 'n':
-		listn++;
-		newline();
-		print();
-		continue;
-
-	case '\n':
-		if (a1==0) {
-			a1 = dot+1;
-			addr2 = a1;
-			addr1 = a1;
-		}
-		if (lastsep==';')
-			addr1 = a1;
-		print();
-		continue;
-
-	case 'l':
-		listf++;
-	case 'p':
-	case 'P':
-		newline();
-		print();
-		continue;
-
-	case 'Q':
-		fchange = 0;
-	case 'q':
-		setnoaddr();
-		newline();
-		quit(0);
-
-	case 'r':
-		filename(c);
-	caseread:
-		if ((io = open(file, 0)) < 0) {
-			lastc = '\n';
-			error(file);
-		}
-		setwide();
-		squeeze(0);
-		ninbuf = 0;
-		c = zero != dol;
-		append(getfile, addr2);
-		exfile();
-		fchange = c;
-		continue;
-
-	case 's':
-		nonzero();
-		substitute(globp!=0);
-		continue;
-
-	case 't':
-		move(1);
-		continue;
-
-	case 'u':
-		nonzero();
-		newline();
-		if ((*addr2&~01) != subnewa)
-			error(Q);
-		*addr2 = subolda;
-		dot = addr2;
-		continue;
-
-	case 'v':
-		global(0);
-		continue;
-
-	case 'W':
-		wrapp++;
-	case 'w':
-		setwide();
-		squeeze(dol>zero);
-		if ((temp = getchr()) != 'q' && temp != 'Q') {
-			peekc = temp;
-			temp = 0;
-		}
-		filename(c);
-		if(!wrapp ||
-		  ((io = open(file,1)) == -1) ||
-		  ((lseek(io, 0L, 2)) == -1))
-			if ((io = creat(file, 0666)) < 0)
-				error(file);
-		wrapp = 0;
-		if (dol > zero)
-			putfile();
-		exfile();
-		if (addr1<=zero+1 && addr2==dol)
-			fchange = 0;
-		if (temp == 'Q')
-			fchange = 0;
-		if (temp)
-			quit(0);
-		continue;
-
-	case '=':
-		setwide();
-		squeeze(0);
-		newline();
-		count = addr2 - zero;
-		
-		putchar('\n');
-		continue;
-
-	case '!':
-		callunix();
-		continue;
-
-	case EOF:
-		return;
-
-	}
-	error(Q);
-	}
-}
 
 void print(void)
 {
@@ -1079,7 +852,7 @@ void global(int k)
 			*a1 &= ~01;
 			dot = a1;
 			globp = globuf;
-			commands();
+			/*commands();*/
 			a1 = zero;
 		}
 	}
