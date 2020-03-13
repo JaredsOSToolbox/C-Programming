@@ -1,0 +1,60 @@
+ed_manip.c:4:1: error: unknown type name 'include'
+include <stdio.h>
+^
+ed_manip.c:4:9: error: expected identifier or '('
+include <stdio.h>
+        ^
+In file included from ed_manip.c:5:
+/usr/include/string.h:43:8: error: unknown type name 'size_t'
+                     size_t __n) __THROW __nonnull ((1, 2));
+                     ^
+/usr/include/string.h:46:56: error: unknown type name 'size_t'
+extern void *memmove (void *__dest, const void *__src, size_t __n)
+                                                       ^
+/usr/include/string.h:54:18: error: unknown type name 'size_t'
+                      int __c, size_t __n)
+                               ^
+/usr/include/string.h:60:42: error: unknown type name 'size_t'
+extern void *memset (void *__s, int __c, size_t __n) __THROW __nonnull ((1));
+                                         ^
+/usr/include/string.h:63:56: error: unknown type name 'size_t'
+extern int memcmp (const void *__s1, const void *__s2, size_t __n)
+                                                       ^
+/usr/include/string.h:90:48: error: unknown type name 'size_t'
+extern void *memchr (const void *__s, int __c, size_t __n)
+                                               ^
+/usr/include/string.h:125:39: error: unknown type name 'size_t'
+                      const char *__restrict __src, size_t __n)
+                                                    ^
+/usr/include/string.h:133:9: error: unknown type name 'size_t'
+                      size_t __n) __THROW __nonnull ((1, 2));
+                      ^
+/usr/include/string.h:139:57: error: unknown type name 'size_t'
+extern int strncmp (const char *__s1, const char *__s2, size_t __n)
+                                                        ^
+/usr/include/string.h:146:8: error: unknown type name 'size_t'
+extern size_t strxfrm (char *__restrict __dest,
+       ^
+/usr/include/string.h:147:40: error: unknown type name 'size_t'
+                       const char *__restrict __src, size_t __n)
+                                                     ^
+/usr/include/string.h:159:8: error: unknown type name 'size_t'
+extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+       ^
+/usr/include/string.h:159:59: error: unknown type name 'size_t'
+extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+                                                          ^
+/usr/include/string.h:174:45: error: unknown type name 'size_t'
+extern char *strndup (const char *__string, size_t __n)
+                                            ^
+/usr/include/string.h:272:8: error: unknown type name 'size_t'
+extern size_t strcspn (const char *__s, const char *__reject)
+       ^
+/usr/include/string.h:276:8: error: unknown type name 'size_t'
+extern size_t strspn (const char *__s, const char *__accept)
+       ^
+/usr/include/string.h:384:8: error: unknown type name 'size_t'
+extern size_t strlen (const char *__s)
+       ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.

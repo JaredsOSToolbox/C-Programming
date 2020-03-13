@@ -1,11 +1,31 @@
 #!/usr/bin/env zsh
 
+function err_(){
+  echo "[-] BUILD FAILED"
+  cat warning_error_logs.txt | less
+  exit
+}
+
+[[ -z "$@" ]] && exit
+
+echo "[+] Building from source...."
+
+clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && echo "[+] BUILD SUCCESS!" || err_
 target="$1"
+name="$1:t:r"
+
+cp "$target" ""$name"_cloned"
+target=""$name"_cloned"
 
 echo "[+] Contents of $target: "
 cat "$target"
-echo -e ",s/yes/replaced/g\nw\nq" | ./ed_manip "$target"
+echo -e ",s/this/replaced/g\n,s/^yes/line/g\nw\nq" | ./ed_manip "$target"
 
-cat "[+] Contents of $target after replacement: "
+echo "[+] Contents of $target after replacement: "
 cat "$target"
 
+echo -e ",s/^line/LINE/g\nw\nq" | ./ed_manip "$target"
+echo "[+] Contents of $target after beginning line replacement:"
+cat "$target"
+
+rm "$target"
