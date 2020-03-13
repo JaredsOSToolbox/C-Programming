@@ -1,5 +1,9 @@
 #!/usr/bin/env zsh
 
+function succ_(){
+  echo "[+] BUILD SUCCEEDED!"
+  echo "[+] Number of lines: $(cat ed_manip.c | wc -l)"
+}
 function err_(){
   echo "[-] BUILD FAILED"
   cat warning_error_logs.txt | less
@@ -10,7 +14,7 @@ function err_(){
 
 echo "[+] Building from source...."
 
-clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && echo "[+] BUILD SUCCESS!" || err_
+clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && succ_ || err_
 target="$1"
 name="$1:t:r"
 

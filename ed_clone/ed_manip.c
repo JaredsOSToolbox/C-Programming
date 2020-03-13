@@ -1,7 +1,7 @@
 // the ed editor stripped
 // Jared Dyreson
 
-include <stdio.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -135,8 +135,6 @@ void nonzero(void);
 void onhup(int n);
 void onintr(int n);
 void print(void);
-void putchr(int ac);
-void putd(void);
 void putfile(void);
 int putline(void);
 void quit(int n);
@@ -426,8 +424,8 @@ void commands(void)
 		squeeze(0);
 		newline();
 		count = addr2 - zero;
-		putd();
-		putchr('\n');
+		
+		putchar('\n');
 		continue;
 
 	case '!':
@@ -451,8 +449,8 @@ void print(void)
 	do {
 		if (listn) {
 			count = a1-zero;
-			putd();
-			putchr('\t');
+			
+			putchar('\t');
 		}
 		puts(getline_(*a1++));
 	} while (a1 <= addr2);
@@ -636,15 +634,15 @@ void exfile(void)
 	close(io);
 	io = -1;
 	if (vflag) {
-		putd();
-		putchr('\n');
+		
+		putchar('\n');
 	}
 }
 
 void onintr(int n)
 {
 	signal(SIGINT, onintr);
-	putchr('\n');
+	putchar('\n');
 	lastc = '\n';
 	error(Q);
 }
@@ -671,7 +669,7 @@ void error(char *s)
 	wrapp = 0;
 	listf = 0;
 	listn = 0;
-	putchr('?');
+	putchar('?');
 	puts(s);
 	count = 0;
 	lseek(0, (long)0, 2);
@@ -1636,55 +1634,9 @@ void putd(void)
 	r = count%10;
 	count /= 10;
 	if (count)
-		putd();
-	putchr(r + '0');
+	putchar(r + '0');
 }
 
 char	line[70];
 char	*linp	= line;
 
-void putchr(int ac)
-{
-	char *lp;
-	int c;
-
-	lp = linp;
-	c = ac;
-	if (listf) {
-		if (c=='\n') {
-			if (linp!=line && linp[-1]==' ') {
-				*lp++ = '\\';
-				*lp++ = 'n';
-			}
-		} else {
-			if (col > (72-4-2)) {
-				col = 8;
-				*lp++ = '\\';
-				*lp++ = '\n';
-				*lp++ = '\t';
-			}
-			col++;
-			if (c=='\b' || c=='\t' || c=='\\') {
-				*lp++ = '\\';
-				if (c=='\b')
-					c = 'b';
-				else if (c=='\t')
-					c = 't';
-				col++;
-			} else if (c<' ' || c=='\177') {
-				*lp++ = '\\';
-				*lp++ =  (c>>6)    +'0';
-				*lp++ = ((c>>3)&07)+'0';
-				c     = ( c    &07)+'0';
-				col += 3;
-			}
-		}
-	}
-	*lp++ = c;
-	if(c == '\n' || lp >= &line[64]) {
-		linp = line;
-		write(oflag?2:1, line, lp-line);
-		return;
-	}
-	linp = lp;
-}
