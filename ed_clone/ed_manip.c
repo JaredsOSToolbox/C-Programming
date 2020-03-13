@@ -8,7 +8,6 @@
 #include <signal.h>
 #include <setjmp.h>
 
-/* make BLKSIZE and LBSIZE 512 for smaller machines */
 #define	BLKSIZE	4096
 #define	NBLK	2047
 
@@ -55,17 +54,8 @@ int	ninbuf;
 int	io;
 int	pflag;
 
-/*long	lseek(int, long, int);*/
-/*int	open(char *, int);*/
-/*int	creat(char *, int);*/
 int	read(int, char*, int);
 int	write(int, char*, int);
-/*int	close(int);*/
-/*int	fork(void);*/
-/*int	execl(char *, ...);*/
-/*int	exit(int);*/
-/*int	wait(int *);*/
-/*int	unlink(char *);*/
 
 
 
@@ -156,41 +146,49 @@ SIG_TYP	oldquit;
 #define	SIGHUP	1	/* hangup */
 #define	SIGQUIT	3	/* quit (ASCII FS) */
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
+  if(argc < 2){ fprintf(stderr, "Usage: %s [pattern] [file(s)]\n", argv[0]); }
+  printf("size of argc: %d\n", argc);
+  argv++;
+	while (argc > 1 && **argv=='-') {
+		switch((*argv)[1]) {
+      case 'i': printf("case insense\n"); break;
+		}
+		argv++;
+		argc--;
+	}
+  printf("size of argc: %d\n", argc);
+  while(argc > 1){
+    printf("content of argument[%d]: %s\n", argc, *argv);
+		argv++;
+		argc--;
+  }
+  return 0;
+
+
+
+
+
+
+
+
+
+
+
+
 	char *p1, *p2;
 	SIG_TYP oldintr;
 
 	oldquit = signal(SIGQUIT, SIG_IGN);
 	oldhup = signal(SIGHUP, SIG_IGN);
 	oldintr = signal(SIGINT, SIG_IGN);
-	if (signal(SIGTERM, SIG_IGN) == SIG_DFL)
-		signal(SIGTERM, quit);
+  if (signal(SIGTERM, SIG_IGN) == SIG_DFL){ signal(SIGTERM, quit); }
 	argv++;
-	while (argc > 1 && **argv=='-') {
-		switch((*argv)[1]) {
-
-		case '\0':
-			vflag = 0;
-			break;
-
-		case 'q':
-			signal(SIGQUIT, SIG_DFL);
-			vflag = 1;
-			break;
-
-		case 'o':
-			oflag = 1;
-			break;
-		}
-		argv++;
-		argc--;
-	}
 	if (oflag) {
+    // print this to the console
 		p1 = "/dev/stdout";
 		p2 = savedfile;
-		while (*p2++ = *p1++)
-			;
+		while (*p2++ = *p1++){}
 	}
 	if (argc>1) {
 		p1 = *argv;
@@ -202,14 +200,14 @@ int main(int argc, char *argv[])
 	}
 	zero = (unsigned *)malloc(nlall*sizeof(unsigned));
 	tfname = mkstemp("/tmp/ed_temp_file.txt");
-	init();
-	if (oldintr!=SIG_IGN)
-		signal(SIGINT, onintr);
-	if (oldhup!=SIG_IGN)
-		signal(SIGHUP, onhup);
-	setjmp(savej);
-	commands();
-	quit(0);
+
+  init();
+  if (oldintr!=SIG_IGN) {signal(SIGINT, onintr);}
+  if (oldhup!=SIG_IGN) {signal(SIGHUP, onhup);}
+  setjmp(savej);
+  commands();
+  /*printf("goodbye from main!\n");*/
+	/*quit(0);*/
 	return 0;
 }
 
@@ -1639,4 +1637,3 @@ void putd(void)
 
 char	line[70];
 char	*linp	= line;
-
