@@ -1,0 +1,11 @@
+#!/usr/bin/env zsh
+
+target="$1"
+
+echo "[+] Contents of $target: "
+cat "$target"
+echo -e ",s/yes/replaced/g\nw\nq" | ./ed_manip "$target"
+
+cat "[+] Contents of $target after replacement: "
+cat "$target"
+
