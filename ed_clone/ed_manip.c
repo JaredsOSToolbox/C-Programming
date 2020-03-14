@@ -1,7 +1,7 @@
 // the ed editor stripped
 // Jared Dyreson
 
-include <stdio.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -55,17 +55,8 @@ int	ninbuf;
 int	io;
 int	pflag;
 
-/*long	lseek(int, long, int);*/
-/*int	open(char *, int);*/
-/*int	creat(char *, int);*/
 int	read(int, char*, int);
 int	write(int, char*, int);
-/*int	close(int);*/
-/*int	fork(void);*/
-/*int	execl(char *, ...);*/
-/*int	exit(int);*/
-/*int	wait(int *);*/
-/*int	unlink(char *);*/
 
 
 
