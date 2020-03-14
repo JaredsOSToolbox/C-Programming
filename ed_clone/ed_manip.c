@@ -55,14 +55,11 @@ int	ninbuf;
 int	io;
 int	pflag;
 
-<<<<<<< HEAD
-int	read(int, char*, int);
-int	write(int, char*, int);
+/*int	read(int, char*, int);*/
+/*int	write(int, char*, int);*/
 
 
 
-=======
->>>>>>> 6736246f7bf5221e2eb6a5335805f9e3dad6d92a
 int	vflag	= 1;
 int	oflag;
 int	listf;
