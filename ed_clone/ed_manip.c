@@ -1368,15 +1368,5 @@ int cclass(char *set, int c, int af)
 	return(!af);
 }
 
-void putd(void)
-{
-	int r;
-
-	r = count%10;
-	count /= 10;
-	if (count)
-	putchar(r + '0');
-}
-
 char	line[70];
 char	*linp	= line;
