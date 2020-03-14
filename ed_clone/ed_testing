@@ -2,7 +2,7 @@
 
 function succ_(){
   echo "[+] BUILD SUCCEEDED!"
-  echo "[+] Number of lines: $(cat ed_manip.c | wc -l)"
+  echo "[+] Number of non blank lines: $(cat ed_manip.c | sed '/^\s*$/d' | wc -l)"
 }
 
 function err_(){
@@ -36,7 +36,7 @@ function testing_with_files_(){
 
 function testing_with_arguments_(){
   clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && succ_ || err_
-  ./ed_manip -i "EXPRESSION" "path_to_file.txt"
+  ./ed_manip -i "EXPRESSION" ./input.txt
 }
 
 [[ -z "$@" ]] && exit

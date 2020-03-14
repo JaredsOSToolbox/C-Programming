@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <signal.h>
 #include <setjmp.h>
@@ -54,11 +55,6 @@ int	ninbuf;
 int	io;
 int	pflag;
 
-int	read(int, char*, int);
-int	write(int, char*, int);
-
-
-
 int	vflag	= 1;
 int	oflag;
 int	listf;
@@ -107,7 +103,6 @@ int execute(unsigned int *addr);
 void exfile(void);
 void filename(int comm);
 void gdelete(void);
-int getchr(void);
 int getcopy(void);
 int getfile(void);
 int getnum(void);
@@ -115,7 +110,6 @@ int getsub(void);
 int gettty(void);
 int gety(void);
 void global(int k);
-void init(void);
 unsigned int *address(void);
 void join(void);
 void move(int cflag);
@@ -145,23 +139,35 @@ SIG_TYP	oldquit;
 #define	SIGHUP	1	/* hangup */
 #define	SIGQUIT	3	/* quit (ASCII FS) */
 
+size_t NUMBER_OF_LINES = 1000;
+#define MAX_LINE_SIZE 50
+
+char** read_lines(char* path_){
+  char * line = NULL;
+  size_t len = 0, index_ = 0, t_ = 0;
+  ssize_t read;
+  char **lines;
+  lines = malloc(NUMBER_OF_LINES * sizeof(char*));
+  for (int i = 0; i < NUMBER_OF_LINES; i++){ lines[i] = malloc((MAX_LINE_SIZE+1) * sizeof(char)); }
+  FILE* input = fopen(path_, "r");
+  while((read = getline(&line, &len, input)) != EOF && (index_++ < NUMBER_OF_LINES)){ strcpy(lines[index_], line); } 
+  t_ = index_;
+  while(t_++ < NUMBER_OF_LINES){ free(lines[t_]); }
+  NUMBER_OF_LINES = index_;
+  fclose(input);
+  return lines;
+}
 int main(int argc, char *argv[]){
-  if(argc < 2){ fprintf(stderr, "Usage: %s [pattern] [file(s)]\n", argv[0]); }
-  printf("size of argc: %d\n", argc);
+  if(argc < 2){ fprintf(stderr, "Usage: %s [pattern] [file(s)]\n", argv[0]); exit(1); }
   argv++;
-	while (argc > 1 && **argv=='-') {
-		switch((*argv)[1]) {
-      case 'i': printf("case insense\n"); break;
-		}
-		argv++;
-		argc--;
-	}
-  printf("size of argc: %d\n", argc);
-  while(argc > 1){
-    printf("content of argument[%d]: %s\n", argc, *argv);
-		argv++;
-		argc--;
-  }
+  while (argc-- > 1 && **argv =='-') { argv++; }
+
+  char expression_[50]; strcpy(expression_, *argv++);
+  printf("[+] Processing: %s\nExpression captured: %s\n", *argv, expression_);
+  if(access(*argv, F_OK) == EOF){ fprintf(stderr, "Cowardly refusing to open %s, it does not exist\n", *argv); exit(1); }
+  char** content = read_lines(*argv);
+  for(int i = 0; i < NUMBER_OF_LINES; ++i){ printf("%s", content[i]); }
+  free(content);
   return 0;
 
 
@@ -200,7 +206,6 @@ int main(int argc, char *argv[]){
 	zero = (unsigned *)malloc(nlall*sizeof(unsigned));
 	tfname = mkstemp("/tmp/ed_temp_file.txt");
 
-  init();
   if (oldintr!=SIG_IGN) {signal(SIGINT, onintr);}
   if (oldhup!=SIG_IGN) {signal(SIGHUP, onhup);}
   setjmp(savej);
@@ -244,7 +249,7 @@ address(void)
 	opcnt = 0;
 	a = dot;
 	do {
-		do c = getchr(); while (c==' ' || c=='\t');
+		do c = getchar(); while (c==' ' || c=='\t');
 		if ('0'<=c && c<='9') {
 			peekc = c;
 			if (!opcnt)
@@ -259,7 +264,7 @@ address(void)
 				error(Q);
 			break;
 		case '\'':
-			c = getchr();
+			c = getchar();
 			if (opcnt || c<'a' || 'z'<c)
 				error(Q);
 			a = zero;
@@ -314,7 +319,7 @@ int getnum(void)
 	int r, c;
 
 	r = 0;
-	while ((c=getchr())>='0' && c<='9')
+	while ((c=getchar())>='0' && c<='9')
 		r = r*10 + c - '0';
 	peekc = c;
 	return (r);
@@ -349,7 +354,7 @@ void newline(void)
 {
 	int c;
 
-	if ((c = getchr()) == '\n' || c == EOF)
+	if ((c = getchar()) == '\n' || c == EOF)
 		return;
 	if (c=='p' || c=='l' || c=='n') {
 		pflag++;
@@ -357,7 +362,7 @@ void newline(void)
 			listf++;
 		else if (c=='n')
 			listn++;
-		if ((c=getchr())=='\n')
+		if ((c=getchar())=='\n')
 			return;
 	}
 	error(Q);
@@ -369,7 +374,7 @@ void filename(int comm)
 	int c;
 
 	count = 0;
-	c = getchr();
+	c = getchar();
 	if (c=='\n' || c==EOF) {
 		p1 = savedfile;
 		if (*p1==0 && comm!='f')
@@ -381,7 +386,7 @@ void filename(int comm)
 	}
 	if (c!=' ')
 		error(Q);
-	while ((c = getchr()) == ' ')
+	while ((c = getchar()) == ' ')
 		;
 	if (c=='\n')
 		error(Q);
@@ -390,7 +395,7 @@ void filename(int comm)
 		if (p1 >= &file[sizeof(file)-1] || c==' ' || c==EOF)
 			error(Q);
 		*p1++ = c;
-	} while ((c = getchr()) != '\n');
+	} while ((c = getchar()) != '\n');
 	*p1++ = 0;
 	if (savedfile[0]==0 || comm=='e' || comm=='f') {
 		p1 = savedfile;
@@ -450,7 +455,7 @@ void error(char *s)
 	globp = 0;
 	peekc = lastc;
 	if(lastc)
-		while ((c = getchr()) != '\n' && c != EOF)
+		while ((c = getchar()) != '\n' && c != EOF)
 			;
 	if (io > 0) {
 		close(io);
@@ -459,24 +464,6 @@ void error(char *s)
 	longjmp(savej, 1);
 }
 
-int getchr(void)
-{
-	char c;
-	if (lastc=peekc) {
-		peekc = 0;
-		return(lastc);
-	}
-	if (globp) {
-		if ((lastc = *globp++) != 0)
-			return(lastc);
-		globp = 0;
-		return(EOF);
-	}
-	if (read(0, &c, 1) <= 0)
-		return(lastc = EOF);
-	lastc = c&0177;
-	return(lastc);
-}
 
 int gettty(void)
 {
@@ -497,7 +484,7 @@ int gety(void)
 
 	p = linebuf;
 	gf = globp;
-	while ((c = getchr()) != '\n') {
+	while ((c = getchar()) != '\n') {
 		if (c==EOF) {
 			if (gf)
 				peekc = c;
@@ -786,23 +773,6 @@ void blkio(int b, char *buf, int (*iofcn)(int, char*, int))
 	}
 }
 
-void init(void)
-{
-	int *markp;
-
-	close(tfile);
-	tline = 2;
-	for (markp = names; markp < &names[26]; )
-		*markp++ = 0;
-	subnewa = 0;
-	anymarks = 0;
-	iblock = -1;
-	oblock = -1;
-	ichanged = 0;
-	close(creat(tfname, 0600));
-	tfile = open(tfname, 2);
-	dot = dol = zero;
-}
 
 void global(int k)
 {
@@ -815,15 +785,15 @@ void global(int k)
 		error(Q);
 	setwide();
 	squeeze(dol>zero);
-	if ((c=getchr())=='\n')
+	if ((c=getchar())=='\n')
 		error(Q);
 	compile(c);
 	gp = globuf;
-	while ((c = getchr()) != '\n') {
+	while ((c = getchar()) != '\n') {
 		if (c==EOF)
 			error(Q);
 		if (c=='\\') {
-			c = getchr();
+			c = getchar();
 			if (c!='\n')
 				*gp++ = '\\';
 		}
@@ -935,14 +905,14 @@ int compsub(void)
 	int seof, c;
 	char *p;
 
-	if ((seof = getchr()) == '\n' || seof == ' ')
+	if ((seof = getchar()) == '\n' || seof == ' ')
 		error(Q);
 	compile(seof);
 	p = rhsbuf;
 	for (;;) {
-		c = getchr();
+		c = getchar();
 		if (c=='\\')
-			c = getchr() | 0200;
+			c = getchar() | 0200;
 		if (c=='\n') {
 			if (globp && globp[0])	/* last '\n' does not count */
 				c |= 0200;
@@ -959,7 +929,7 @@ int compsub(void)
 			error(Q);
 	}
 	*p++ = 0;
-	if ((peekc = getchr()) == 'g') {
+	if ((peekc = getchar()) == 'g') {
 		peekc = 0;
 		newline();
 		return(1);
@@ -1100,7 +1070,7 @@ void compile(int eof)
 
 	ep = expbuf;
 	bracketp = bracket;
-	if ((c = getchr()) == '\n') {
+	if ((c = getchar()) == '\n') {
 		peekc = c;
 		c = eof;
 	}
@@ -1111,7 +1081,7 @@ void compile(int eof)
 	}
 	nbra = 0;
 	if (c=='^') {
-		c = getchr();
+		c = getchar();
 		*ep++ = CCIRC;
 	}
 	peekc = c;
@@ -1119,7 +1089,7 @@ void compile(int eof)
 	for (;;) {
 		if (ep >= &expbuf[ESIZE])
 			goto cerror;
-		c = getchr();
+		c = getchar();
 		if (c == '\n') {
 			peekc = c;
 			c = eof;
@@ -1135,7 +1105,7 @@ void compile(int eof)
 		switch (c) {
 
 		case '\\':
-			if ((c = getchr())=='(') {
+			if ((c = getchar())=='(') {
 				if (nbra >= NBRA)
 					goto cerror;
 				*bracketp++ = nbra;
@@ -1175,7 +1145,7 @@ void compile(int eof)
 			continue;
 
 		case '$':
-			if ((peekc=getchr()) != eof && peekc!='\n')
+			if ((peekc=getchar()) != eof && peekc!='\n')
 				goto defchar;
 			*ep++ = CDOL;
 			continue;
@@ -1184,15 +1154,15 @@ void compile(int eof)
 			*ep++ = CCL;
 			*ep++ = 0;
 			cclcnt = 1;
-			if ((c=getchr()) == '^') {
-				c = getchr();
+			if ((c=getchar()) == '^') {
+				c = getchar();
 				ep[-2] = NCCL;
 			}
 			do {
 				if (c=='\n')
 					goto cerror;
 				if (c=='-' && ep[-1]!=0) {
-					if ((c=getchr())==']') {
+					if ((c=getchar())==']') {
 						*ep++ = '-';
 						cclcnt++;
 						break;
@@ -1209,7 +1179,7 @@ void compile(int eof)
 				cclcnt++;
 				if (ep >= &expbuf[ESIZE])
 					goto cerror;
-			} while ((c = getchr()) != ']');
+			} while ((c = getchar()) != ']');
 			lastep[1] = cclcnt;
 			continue;
 
