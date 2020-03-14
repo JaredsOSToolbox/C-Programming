@@ -15,7 +15,8 @@ function testing_with_files_(){
 
   echo "[+] Building from source...."
 
-  clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && succ_ || err_
+  #clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && succ_ || err_
+  clang -lm -g "ed_manip.c" -o "ed_manip"
 
   cp "$target" ""$name"_cloned"
   target=""$name"_cloned"
@@ -36,7 +37,7 @@ function testing_with_files_(){
 
 function testing_with_arguments_(){
   clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && succ_ || err_
-  ./ed_manip -i "EXPRESSION" ./input.txt
+  ./ed_manip -i "^EXPRESSION" ./input.txt
 }
 
 [[ -z "$@" ]] && exit
