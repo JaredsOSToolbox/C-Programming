@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include <signal.h>
 #include <setjmp.h>
 
+/* make BLKSIZE and LBSIZE 512 for smaller machines */
 #define	BLKSIZE	4096
 #define	NBLK	2047
 
@@ -55,8 +55,17 @@ int	ninbuf;
 int	io;
 int	pflag;
 
-/*int	read(int, char*, int);*/
-/*int	write(int, char*, int);*/
+/*long	lseek(int, long, int);*/
+/*int	open(char *, int);*/
+/*int	creat(char *, int);*/
+int	read(int, char*, int);
+int	write(int, char*, int);
+/*int	close(int);*/
+/*int	fork(void);*/
+/*int	execl(char *, ...);*/
+/*int	exit(int);*/
+/*int	wait(int *);*/
+/*int	unlink(char *);*/
 
 
 
@@ -100,7 +109,8 @@ int backref(int i, char *lp);
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
 void callunix(void);
 int cclass(char *set, int c, int af);
-void compile();
+void commands(void);
+void compile(int eof);
 int compsub(void);
 void dosub(void);
 void error(char *s);
@@ -108,11 +118,15 @@ int execute(unsigned int *addr);
 void exfile(void);
 void filename(int comm);
 void gdelete(void);
+int getchr(void);
 int getcopy(void);
 int getfile(void);
 int getnum(void);
 int getsub(void);
+int gettty(void);
+int gety(void);
 void global(int k);
+void init(void);
 unsigned int *address(void);
 void join(void);
 void move(int cflag);
@@ -123,6 +137,7 @@ void onintr(int n);
 void print(void);
 void putfile(void);
 int putline(void);
+void quit(int n);
 void rdelete(unsigned int *ad1, unsigned int *ad2);
 void reverse(unsigned int *a1, unsigned int *a2);
 void setwide(void);
@@ -141,43 +156,289 @@ SIG_TYP	oldquit;
 #define	SIGHUP	1	/* hangup */
 #define	SIGQUIT	3	/* quit (ASCII FS) */
 
-size_t NUMBER_OF_LINES = 1000;
-#define MAX_LINE_SIZE 50
+int main(int argc, char *argv[])
+{
+	char *p1, *p2;
+	SIG_TYP oldintr;
 
-void j_error_(const char* message){ fprintf(stderr, "got an error: %s\n", message); exit(1); }
+	oldquit = signal(SIGQUIT, SIG_IGN);
+	oldhup = signal(SIGHUP, SIG_IGN);
+	oldintr = signal(SIGINT, SIG_IGN);
+	if (signal(SIGTERM, SIG_IGN) == SIG_DFL)
+		signal(SIGTERM, quit);
+	argv++;
+	while (argc > 1 && **argv=='-') {
+		switch((*argv)[1]) {
 
-char** read_lines(char* path_){
-  char * line = NULL;
-  size_t len = 0, index_ = 0, t_ = 0;
-  ssize_t read;
-  char **lines;
-  lines = malloc(NUMBER_OF_LINES * sizeof(char*));
-  for (int i = 0; i < NUMBER_OF_LINES; i++){ lines[i] = malloc((MAX_LINE_SIZE+1) * sizeof(char)); }
-  FILE* input = fopen(path_, "r");
-  while((read = getline(&line, &len, input)) != EOF && (index_++ < NUMBER_OF_LINES)){ strcpy(lines[index_], line); } 
-  t_ = index_;
-  while(t_++ < NUMBER_OF_LINES){ free(lines[t_]); }
-  NUMBER_OF_LINES = index_;
-  fclose(input);
-  return lines;
+		case '\0':
+			vflag = 0;
+			break;
+
+		case 'q':
+			signal(SIGQUIT, SIG_DFL);
+			vflag = 1;
+			break;
+
+		case 'o':
+			oflag = 1;
+			break;
+		}
+		argv++;
+		argc--;
+	}
+	if (oflag) {
+		p1 = "/dev/stdout";
+		p2 = savedfile;
+		while (*p2++ = *p1++)
+			;
+	}
+	if (argc>1) {
+		p1 = *argv;
+		p2 = savedfile;
+		while (*p2++ = *p1++)
+			if (p2 >= &savedfile[sizeof(savedfile)])
+				p2--;
+		globp = "r";
+	}
+	zero = (unsigned *)malloc(nlall*sizeof(unsigned));
+	tfname = mkstemp("/tmp/ed_temp_file.txt");
+	init();
+	if (oldintr!=SIG_IGN)
+		signal(SIGINT, onintr);
+	if (oldhup!=SIG_IGN)
+		signal(SIGHUP, onhup);
+	setjmp(savej);
+	commands();
+	quit(0);
+	return 0;
 }
 
-int main(int argc, char *argv[]){
-  if(argc < 2){ fprintf(stderr, "Usage: %s [pattern] [file(s)]\n", argv[0]); exit(1); }
-  argv++;
-  while (argc-- > 1 && **argv =='-') { argv++; }
+void commands(void)
+{
+	unsigned int *a1;
+	int c;
+	int temp;
+	char lastsep;
 
-  char expression_[50]; strcpy(expression_, *argv++);
-  printf("[+] Processing: %s\nExpression captured: %s\n", *argv, expression_);
-  compile(expression_);
-  if(access(*argv, F_OK) == EOF){ fprintf(stderr, "Cowardly refusing to open %s, it does not exist\n", *argv); exit(1); }
-  char** content = read_lines(*argv);
-  for(int i = 0; i < NUMBER_OF_LINES; ++i){ printf("%s", content[i]); }
-  free(content);
-  return 0;
+	for (;;) {
+	if (pflag) {
+		pflag = 0;
+		addr1 = addr2 = dot;
+		print();
+	}
+	c = '\n';
+	for (addr1 = 0;;) {
+		lastsep = c;
+		a1 = address();
+		c = getchr();
+		if (c!=',' && c!=';')
+			break;
+		if (lastsep==',')
+			error(Q);
+		if (a1==0) {
+			a1 = zero+1;
+			if (a1>dol)
+				a1--;
+		}
+		addr1 = a1;
+		if (c==';')
+			dot = a1;
+	}
+	if (lastsep!='\n' && a1==0)
+		a1 = dol;
+	if ((addr2=a1)==0) {
+		given = 0;
+		addr2 = dot;	
+	}
+	else
+		given = 1;
+	if (addr1==0)
+		addr1 = addr2;
+	switch(c) {
 
+	case 'a':
+		add(0);
+		continue;
+
+	case 'c':
+		nonzero();
+		newline();
+		rdelete(addr1, addr2);
+		append(gettty, addr1-1);
+		continue;
+
+	case 'd':
+		nonzero();
+		newline();
+		rdelete(addr1, addr2);
+		continue;
+
+	case 'E':
+		fchange = 0;
+		c = 'e';
+	case 'e':
+		setnoaddr();
+		if (vflag && fchange) {
+			fchange = 0;
+			error(Q);
+		}
+		filename(c);
+		init();
+		addr2 = zero;
+		goto caseread;
+
+	case 'f':
+		setnoaddr();
+		filename(c);
+		puts(savedfile);
+		continue;
+
+	case 'g':
+		global(1);
+		continue;
+
+	case 'i':
+		add(-1);
+		continue;
+
+
+	case 'j':
+		if (!given)
+			addr2++;
+		newline();
+		join();
+		continue;
+
+	case 'k':
+		nonzero();
+		if ((c = getchr()) < 'a' || c > 'z')
+			error(Q);
+		newline();
+		names[c-'a'] = *addr2 & ~01;
+		anymarks |= 01;
+		continue;
+
+	case 'm':
+		move(0);
+		continue;
+
+	case 'n':
+		listn++;
+		newline();
+		print();
+		continue;
+
+	case '\n':
+		if (a1==0) {
+			a1 = dot+1;
+			addr2 = a1;
+			addr1 = a1;
+		}
+		if (lastsep==';')
+			addr1 = a1;
+		print();
+		continue;
+
+	case 'l':
+		listf++;
+	case 'p':
+	case 'P':
+		newline();
+		print();
+		continue;
+
+	case 'Q':
+		fchange = 0;
+	case 'q':
+		setnoaddr();
+		newline();
+		quit(0);
+
+	case 'r':
+		filename(c);
+	caseread:
+		if ((io = open(file, 0)) < 0) {
+			lastc = '\n';
+			error(file);
+		}
+		setwide();
+		squeeze(0);
+		ninbuf = 0;
+		c = zero != dol;
+		append(getfile, addr2);
+		exfile();
+		fchange = c;
+		continue;
+
+	case 's':
+		nonzero();
+		substitute(globp!=0);
+		continue;
+
+	case 't':
+		move(1);
+		continue;
+
+	case 'u':
+		nonzero();
+		newline();
+		if ((*addr2&~01) != subnewa)
+			error(Q);
+		*addr2 = subolda;
+		dot = addr2;
+		continue;
+
+	case 'v':
+		global(0);
+		continue;
+
+	case 'W':
+		wrapp++;
+	case 'w':
+		setwide();
+		squeeze(dol>zero);
+		if ((temp = getchr()) != 'q' && temp != 'Q') {
+			peekc = temp;
+			temp = 0;
+		}
+		filename(c);
+		if(!wrapp ||
+		  ((io = open(file,1)) == -1) ||
+		  ((lseek(io, 0L, 2)) == -1))
+			if ((io = creat(file, 0666)) < 0)
+				error(file);
+		wrapp = 0;
+		if (dol > zero)
+			putfile();
+		exfile();
+		if (addr1<=zero+1 && addr2==dol)
+			fchange = 0;
+		if (temp == 'Q')
+			fchange = 0;
+		if (temp)
+			quit(0);
+		continue;
+
+	case '=':
+		setwide();
+		squeeze(0);
+		newline();
+		count = addr2 - zero;
+		
+		putchar('\n');
+		continue;
+
+	case '!':
+		callunix();
+		continue;
+
+	case EOF:
+		return;
+
+	}
+	error(Q);
+	}
 }
-
 
 void print(void)
 {
@@ -212,7 +473,7 @@ address(void)
 	opcnt = 0;
 	a = dot;
 	do {
-		do c = getchar(); while (c==' ' || c=='\t');
+		do c = getchr(); while (c==' ' || c=='\t');
 		if ('0'<=c && c<='9') {
 			peekc = c;
 			if (!opcnt)
@@ -227,7 +488,7 @@ address(void)
 				error(Q);
 			break;
 		case '\'':
-			c = getchar();
+			c = getchr();
 			if (opcnt || c<'a' || 'z'<c)
 				error(Q);
 			a = zero;
@@ -282,7 +543,7 @@ int getnum(void)
 	int r, c;
 
 	r = 0;
-	while ((c=getchar())>='0' && c<='9')
+	while ((c=getchr())>='0' && c<='9')
 		r = r*10 + c - '0';
 	peekc = c;
 	return (r);
@@ -317,7 +578,7 @@ void newline(void)
 {
 	int c;
 
-	if ((c = getchar()) == '\n' || c == EOF)
+	if ((c = getchr()) == '\n' || c == EOF)
 		return;
 	if (c=='p' || c=='l' || c=='n') {
 		pflag++;
@@ -325,7 +586,7 @@ void newline(void)
 			listf++;
 		else if (c=='n')
 			listn++;
-		if ((c=getchar())=='\n')
+		if ((c=getchr())=='\n')
 			return;
 	}
 	error(Q);
@@ -337,7 +598,7 @@ void filename(int comm)
 	int c;
 
 	count = 0;
-	c = getchar();
+	c = getchr();
 	if (c=='\n' || c==EOF) {
 		p1 = savedfile;
 		if (*p1==0 && comm!='f')
@@ -349,7 +610,7 @@ void filename(int comm)
 	}
 	if (c!=' ')
 		error(Q);
-	while ((c = getchar()) == ' ')
+	while ((c = getchr()) == ' ')
 		;
 	if (c=='\n')
 		error(Q);
@@ -358,7 +619,7 @@ void filename(int comm)
 		if (p1 >= &file[sizeof(file)-1] || c==' ' || c==EOF)
 			error(Q);
 		*p1++ = c;
-	} while ((c = getchar()) != '\n');
+	} while ((c = getchr()) != '\n');
 	*p1++ = 0;
 	if (savedfile[0]==0 || comm=='e' || comm=='f') {
 		p1 = savedfile;
@@ -378,7 +639,28 @@ void exfile(void)
 	}
 }
 
+void onintr(int n)
+{
+	signal(SIGINT, onintr);
+	putchar('\n');
+	lastc = '\n';
+	error(Q);
+}
 
+void onhup(int n)
+{
+	signal(SIGINT, SIG_IGN);
+	signal(SIGHUP, SIG_IGN);
+	if (dol > zero) {
+		addr1 = zero+1;
+		addr2 = dol;
+		io = creat("ed.hup", 0600);
+		if (io > 0)
+			putfile();
+	}
+	fchange = 0;
+	quit(0);
+}
 
 void error(char *s)
 {
@@ -397,7 +679,7 @@ void error(char *s)
 	globp = 0;
 	peekc = lastc;
 	if(lastc)
-		while ((c = getchar()) != '\n' && c != EOF)
+		while ((c = getchr()) != '\n' && c != EOF)
 			;
 	if (io > 0) {
 		close(io);
@@ -406,7 +688,60 @@ void error(char *s)
 	longjmp(savej, 1);
 }
 
+int getchr(void)
+{
+	char c;
+	if (lastc=peekc) {
+		peekc = 0;
+		return(lastc);
+	}
+	if (globp) {
+		if ((lastc = *globp++) != 0)
+			return(lastc);
+		globp = 0;
+		return(EOF);
+	}
+	if (read(0, &c, 1) <= 0)
+		return(lastc = EOF);
+	lastc = c&0177;
+	return(lastc);
+}
 
+int gettty(void)
+{
+	int rc;
+
+	if (rc = gety())
+		return(rc);
+	if (linebuf[0]=='.' && linebuf[1]==0)
+		return(EOF);
+	return(0);
+}
+
+int gety(void)
+{
+	int c;
+	char *gf;
+	char *p;
+
+	p = linebuf;
+	gf = globp;
+	while ((c = getchr()) != '\n') {
+		if (c==EOF) {
+			if (gf)
+				peekc = c;
+			return(c);
+		}
+		if ((c &= 0177) == 0)
+			continue;
+		*p++ = c;
+		if (p >= &linebuf[LBSIZE-2])
+			error(Q);
+	}
+
+	*p++ = 0;
+	return(0);
+}
 
 int getfile(void)
 {
@@ -495,8 +830,7 @@ int append(int (*f)(void), unsigned int *a)
 			nlall += 1024;
 			if ((zero = (unsigned *)realloc((char *)zero, nlall*sizeof(unsigned)))==NULL) {
 				error("MEM?");
-        exit(100);
-				/*onhup(0);*/
+				onhup(0);
 			}
 			dot += zero - ozero;
 			dol += zero - ozero;
@@ -513,7 +847,48 @@ int append(int (*f)(void), unsigned int *a)
 	return(nline);
 }
 
+void add(int i)
+{
+	if (i && (given || dol>zero)) {
+		addr1--;
+		addr2--;
+	}
+	squeeze(0);
+	newline();
+	append(gettty, addr2);
+}
 
+void callunix(void)
+{
+	SIG_TYP savint;
+	int pid, rpid;
+	int retcode;
+
+	setnoaddr();
+	if ((pid = fork()) == 0) {
+		signal(SIGHUP, oldhup);
+		signal(SIGQUIT, oldquit);
+		execl("/bin/sh", "sh", "-t", 0);
+		exit(0100);
+	}
+	savint = signal(SIGINT, SIG_IGN);
+	while ((rpid = wait(&retcode)) != pid && rpid != -1)
+		;
+	signal(SIGINT, savint);
+	if (vflag) {
+		puts("!");
+	}
+}
+
+void quit(int n)
+{
+	if (vflag && fchange && dol!=zero) {
+		fchange = 0;
+		error(Q);
+	}
+	unlink(tfname);
+	exit(0);
+}
 
 void rdelete(unsigned int *ad1, unsigned int *ad2)
 {
@@ -640,6 +1015,23 @@ void blkio(int b, char *buf, int (*iofcn)(int, char*, int))
 	}
 }
 
+void init(void)
+{
+	int *markp;
+
+	close(tfile);
+	tline = 2;
+	for (markp = names; markp < &names[26]; )
+		*markp++ = 0;
+	subnewa = 0;
+	anymarks = 0;
+	iblock = -1;
+	oblock = -1;
+	ichanged = 0;
+	close(creat(tfname, 0600));
+	tfile = open(tfname, 2);
+	dot = dol = zero;
+}
 
 void global(int k)
 {
@@ -652,15 +1044,15 @@ void global(int k)
 		error(Q);
 	setwide();
 	squeeze(dol>zero);
-	if ((c=getchar())=='\n')
+	if ((c=getchr())=='\n')
 		error(Q);
 	compile(c);
 	gp = globuf;
-	while ((c = getchar()) != '\n') {
+	while ((c = getchr()) != '\n') {
 		if (c==EOF)
 			error(Q);
 		if (c=='\\') {
-			c = getchar();
+			c = getchr();
 			if (c!='\n')
 				*gp++ = '\\';
 		}
@@ -689,7 +1081,7 @@ void global(int k)
 			*a1 &= ~01;
 			dot = a1;
 			globp = globuf;
-			/*commands();*/
+			commands();
 			a1 = zero;
 		}
 	}
@@ -772,14 +1164,14 @@ int compsub(void)
 	int seof, c;
 	char *p;
 
-	if ((seof = getchar()) == '\n' || seof == ' ')
+	if ((seof = getchr()) == '\n' || seof == ' ')
 		error(Q);
 	compile(seof);
 	p = rhsbuf;
 	for (;;) {
-		c = getchar();
+		c = getchr();
 		if (c=='\\')
-			c = getchar() | 0200;
+			c = getchr() | 0200;
 		if (c=='\n') {
 			if (globp && globp[0])	/* last '\n' does not count */
 				c |= 0200;
@@ -796,7 +1188,7 @@ int compsub(void)
 			error(Q);
 	}
 	*p++ = 0;
-	if ((peekc = getchar()) == 'g') {
+	if ((peekc = getchr()) == 'g') {
 		peekc = 0;
 		newline();
 		return(1);
@@ -927,141 +1319,139 @@ int getcopy(void)
 	return(0);
 }
 
-void compile(const char* string_){
-  printf("got %s\n", string_);
-	int c, cclcnt;
+void compile(int eof)
+{
+	int c;
 	char *ep;
 	char *lastep;
 	char bracket[NBRA], *bracketp;
-  
+	int cclcnt;
+
 	ep = expbuf;
 	bracketp = bracket;
-  if((c = *string_++ == '\n')){
-    peekc = *string_;
-    c = EOF;
-  }
-  if (c == '\0') { if (*ep==0) {j_error_("expression buffer is empty");} return; }
-  nbra = 0;
-  if (*string_ == '^') {
-    printf("got here!\n");
-    c = *string_++;
-    *ep++ = CCIRC;
-  }
-  return;
-	/*if ((c = getchar()) == '\n') {*/
-		/*peekc = c;*/
-		/*c = eof;*/
-	/*}*/
+	if ((c = getchr()) == '\n') {
+		peekc = c;
+		c = eof;
+	}
+	if (c == eof) {
+		if (*ep==0)
+			error(Q);
+		return;
+	}
+	nbra = 0;
+	if (c=='^') {
+		c = getchr();
+		*ep++ = CCIRC;
+	}
+	peekc = c;
+	lastep = 0;
+	for (;;) {
+		if (ep >= &expbuf[ESIZE])
+			goto cerror;
+		c = getchr();
+		if (c == '\n') {
+			peekc = c;
+			c = eof;
+		}
+		if (c==eof) {
+			if (bracketp != bracket)
+				goto cerror;
+			*ep++ = CEOF;
+			return;
+		}
+		if (c!='*')
+			lastep = ep;
+		switch (c) {
 
-	/*peekc = c;*/
-	/*lastep = 0;*/
-	/*for (;;) {*/
-		/*if (ep >= &expbuf[ESIZE])*/
-			/*goto cerror;*/
-		/*c = getchar();*/
-		/*if (c == '\n') {*/
-			/*peekc = c;*/
-			/*c = eof;*/
-		/*}*/
-		/*if (c==eof) {*/
-			/*if (bracketp != bracket)*/
-				/*goto cerror;*/
-			/**ep++ = CEOF;*/
-			/*return;*/
-		/*}*/
-		/*if (c!='*')*/
-			/*lastep = ep;*/
-		/*switch (c) {*/
+		case '\\':
+			if ((c = getchr())=='(') {
+				if (nbra >= NBRA)
+					goto cerror;
+				*bracketp++ = nbra;
+				*ep++ = CBRA;
+				*ep++ = nbra++;
+				continue;
+			}
+			if (c == ')') {
+				if (bracketp <= bracket)
+					goto cerror;
+				*ep++ = CKET;
+				*ep++ = *--bracketp;
+				continue;
+			}
+			if (c>='1' && c<'1'+NBRA) {
+				*ep++ = CBACK;
+				*ep++ = c-'1';
+				continue;
+			}
+			*ep++ = CCHR;
+			if (c=='\n')
+				goto cerror;
+			*ep++ = c;
+			continue;
 
-		/*case '\\':*/
-			/*if ((c = getchar())=='(') {*/
-				/*if (nbra >= NBRA)*/
-					/*goto cerror;*/
-				/**bracketp++ = nbra;*/
-				/**ep++ = CBRA;*/
-				/**ep++ = nbra++;*/
-				/*continue;*/
-			/*}*/
-			/*if (c == ')') {*/
-				/*if (bracketp <= bracket)*/
-					/*goto cerror;*/
-				/**ep++ = CKET;*/
-				/**ep++ = *--bracketp;*/
-				/*continue;*/
-			/*}*/
-			/*if (c>='1' && c<'1'+NBRA) {*/
-				/**ep++ = CBACK;*/
-				/**ep++ = c-'1';*/
-				/*continue;*/
-			/*}*/
-			/**ep++ = CCHR;*/
-			/*if (c=='\n')*/
-				/*goto cerror;*/
-			/**ep++ = c;*/
-			/*continue;*/
+		case '.':
+			*ep++ = CDOT;
+			continue;
 
-		/*case '.':*/
-			/**ep++ = CDOT;*/
-			/*continue;*/
+		case '\n':
+			goto cerror;
 
-		/*case '\n':*/
-			/*goto cerror;*/
+		case '*':
+			if (lastep==0 || *lastep==CBRA || *lastep==CKET)
+				goto defchar;
+			*lastep |= STAR;
+			continue;
 
-		/*case '*':*/
-			/*if (lastep==0 || *lastep==CBRA || *lastep==CKET)*/
-				/*goto defchar;*/
-			/**lastep |= STAR;*/
-			/*continue;*/
+		case '$':
+			if ((peekc=getchr()) != eof && peekc!='\n')
+				goto defchar;
+			*ep++ = CDOL;
+			continue;
 
-		/*case '$':*/
-			/*if ((peekc=getchar()) != eof && peekc!='\n')*/
-				/*goto defchar;*/
-			/**ep++ = CDOL;*/
-			/*continue;*/
+		case '[':
+			*ep++ = CCL;
+			*ep++ = 0;
+			cclcnt = 1;
+			if ((c=getchr()) == '^') {
+				c = getchr();
+				ep[-2] = NCCL;
+			}
+			do {
+				if (c=='\n')
+					goto cerror;
+				if (c=='-' && ep[-1]!=0) {
+					if ((c=getchr())==']') {
+						*ep++ = '-';
+						cclcnt++;
+						break;
+					}
+					while (ep[-1]<c) {
+						*ep = ep[-1]+1;
+						ep++;
+						cclcnt++;
+						if (ep>=&expbuf[ESIZE])
+							goto cerror;
+					}
+				}
+				*ep++ = c;
+				cclcnt++;
+				if (ep >= &expbuf[ESIZE])
+					goto cerror;
+			} while ((c = getchr()) != ']');
+			lastep[1] = cclcnt;
+			continue;
 
-		/*case '[':*/
-			/**ep++ = CCL;*/
-			/**ep++ = 0;*/
-			/*cclcnt = 1;*/
-			/*if ((c=getchar()) == '^') {*/
-				/*c = getchar();*/
-				/*ep[-2] = NCCL;*/
-			/*}*/
-			/*do {*/
-				/*if (c=='\n')*/
-					/*goto cerror;*/
-				/*if (c=='-' && ep[-1]!=0) {*/
-					/*if ((c=getchar())==']') {*/
-						/**ep++ = '-';*/
-						/*cclcnt++;*/
-						/*break;*/
-					/*}*/
-					/*while (ep[-1]<c) {*/
-						/**ep = ep[-1]+1;*/
-						/*ep++;*/
-						/*cclcnt++;*/
-						/*if (ep>=&expbuf[ESIZE])*/
-							/*goto cerror;*/
-					/*}*/
-				/*}*/
-				/**ep++ = c;*/
-				/*cclcnt++;*/
-				/*if (ep >= &expbuf[ESIZE])*/
-					/*goto cerror;*/
-			/*} while ((c = getchar()) != ']');*/
-			/*lastep[1] = cclcnt;*/
-			/*continue;*/
-
-		/*defchar:*/
-		/*default:*/
-			/**ep++ = CCHR;*/
-			/**ep++ = c;*/
-		/*}*/
-	/*}*/
-   /*cerror:*/
-	/*expbuf[0] = 0;*/
-	/*nbra = 0;*/
-	/*error(Q);*/
+		defchar:
+		default:
+			*ep++ = CCHR;
+			*ep++ = c;
+		}
+	}
+   cerror:
+	expbuf[0] = 0;
+	nbra = 0;
+	error(Q);
 }
 
 int execute(unsigned int *addr)
@@ -1237,5 +1627,16 @@ int cclass(char *set, int c, int af)
 	return(!af);
 }
 
+void putd(void)
+{
+	int r;
+
+	r = count%10;
+	count /= 10;
+	if (count)
+	putchar(r + '0');
+}
+
 char	line[70];
 char	*linp	= line;
+
