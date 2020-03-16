@@ -13,23 +13,29 @@ function err_(){
 
 function testing_with_files_(){
 
-  echo "[+] Building from source...."
+  build_input="ed_manip.c"
+  build_input_name="$build_input:t:r"
 
-  #clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && succ_ || err_
-  clang -lm -g "ed_manip.c" -o "ed_manip"
+  echo "[+] Building "$build_input" from source...."
+
+  clang -lm -g "$build_input" -o "$build_input_name" 2> warning_error_logs.txt && succ_ || err_
 
   cp "$target" ""$name"_cloned"
   target=""$name"_cloned"
 
   echo "[+] Contents of $target: "
   cat "$target"
-  echo -e ",s/this/replaced/g\n,s/^yes/line/g\nw\nq" | ./ed_manip "$target"
+  echo -e ",s/this/replaced/g\n,s/^yes/line/g\nw\nq" | ./"$build_input_name" "$target"
 
-  echo "[+] Contents of $target after replacement: "
+  echo "[+] Contents of $target after replacement (this --> replaced | ^yes --> line): "
   cat "$target"
 
-  echo -e ",s/^line/LINE/g\nw\nq" | ./ed_manip "$target"
-  echo "[+] Contents of $target after beginning line replacement:"
+  echo -e ",s/^line/LINE/g\nw\nq" | ./"$build_input_name" "$target"
+  echo "[+] Contents of $target after beginning line replacement (^line --> LINE):"
+  cat "$target"
+
+  echo -e ",s/re.*/restored/g\nw\q" | ./"$build_input_name" "$target"
+  echo "[+] Contents of $target after star line replacement (re.*ed --> restored):"
   cat "$target"
 
   rm "$target"
@@ -43,4 +49,4 @@ function testing_with_arguments_(){
 [[ -z "$@" ]] && exit
 target="$1"
 name="$1:t:r"
-testing_with_arguments_
+testing_with_files_ ./input.txt

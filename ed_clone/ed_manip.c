@@ -37,14 +37,13 @@ char	T[]	= "TMP";
 #define	READ	0
 #define	WRITE	1
 
-int	peekc;
-int	lastc;
+int	peekc, lastc, given;
+
 char	savedfile[FNSIZE];
 char	file[FNSIZE];
 char	linebuf[LBSIZE];
 char	rhsbuf[LBSIZE/2];
 char	expbuf[ESIZE+4];
-int	given;
 unsigned int	*addr1, *addr2;
 unsigned int	*dot, *dol, *zero;
 char	genbuf[LBSIZE];
@@ -55,38 +54,18 @@ int	ninbuf;
 int	io;
 int	pflag;
 
-/*long	lseek(int, long, int);*/
-/*int	open(char *, int);*/
-/*int	creat(char *, int);*/
 int	read(int, char*, int);
 int	write(int, char*, int);
-/*int	close(int);*/
-/*int	fork(void);*/
-/*int	execl(char *, ...);*/
-/*int	exit(int);*/
-/*int	wait(int *);*/
-/*int	unlink(char *);*/
 
+int	vflag	= 1, oflag, listf, listn, col, tfile	= -1, tline;
+char	*globp, *tfname, *loc1, *loc2;
 
-
-int	vflag	= 1;
-int	oflag;
-int	listf;
-int	listn;
-int	col;
-char	*globp;
-int	tfile	= -1;
-int	tline;
-char	*tfname;
-char	*loc1;
-char	*loc2;
 char	ibuff[BLKSIZE];
 int	iblock	= -1;
 char	obuff[BLKSIZE];
 int	oblock	= -1;
 int	ichanged;
 int	nleft;
-char	WRERR[]	= "WRITE ERROR";
 int	names[26];
 int	anymarks;
 char	*braslist[NBRA];
@@ -662,29 +641,19 @@ void onhup(int n)
 	quit(0);
 }
 
-void error(char *s)
-{
+void error(char *s){
 	int c;
 
-	wrapp = 0;
-	listf = 0;
-	listn = 0;
-	putchar('?');
-	puts(s);
+	wrapp = 0, listf = 0, listn = 0;
+  printf("? %s\n", s);
 	count = 0;
 	lseek(0, (long)0, 2);
 	pflag = 0;
-	if (globp)
-		lastc = '\n';
+	if (globp) {lastc = '\n';}
 	globp = 0;
 	peekc = lastc;
-	if(lastc)
-		while ((c = getchr()) != '\n' && c != EOF)
-			;
-	if (io > 0) {
-		close(io);
-		io = -1;
-	}
+	if(lastc){ while ((c = getchr()) != '\n' && c != EOF){} }
+	if (io > 0) { close(io); io = -1; }
 	longjmp(savej, 1);
 }
 
@@ -796,7 +765,7 @@ void putfile(void)
 			if (--nib < 0) {
 				n = fp-genbuf;
 				if(write(io, genbuf, n) != n) {
-					puts(WRERR);
+          printf("WRITE ERROR\n");
 					error(Q);
 				}
 				nib = BLKSIZE-1;
@@ -811,7 +780,7 @@ void putfile(void)
 	} while (a1 <= addr2);
 	n = fp-genbuf;
 	if(write(io, genbuf, n) != n) {
-		puts(WRERR);
+		printf("WRITE ERROR\n");
 		error(Q);
 	}
 }
@@ -1499,54 +1468,16 @@ int execute(unsigned int *addr)
 	return(0);
 }
 
-int advance(char *lp, char *ep)
-{
-	char *curlp;
-	int i;
-
+int advance(char *lp, char *ep){ char *curlp; int i;
 	for (;;) switch (*ep++) {
-
-	case CCHR:
-		if (*ep++ == *lp++)
-			continue;
-		return(0);
-
-	case CDOT:
-		if (*lp++)
-			continue;
-		return(0);
-
-	case CDOL:
-		if (*lp==0)
-			continue;
-		return(0);
-
-	case CEOF:
-		loc2 = lp;
-		return(1);
-
-	case CCL:
-		if (cclass(ep, *lp++, 1)) {
-			ep += *ep;
-			continue;
-		}
-		return(0);
-
-	case NCCL:
-		if (cclass(ep, *lp++, 0)) {
-			ep += *ep;
-			continue;
-		}
-		return(0);
-
-	case CBRA:
-		braslist[*ep++] = lp;
-		continue;
-
-	case CKET:
-		braelist[*ep++] = lp;
-		continue;
-
+	case CCHR: if (*ep++ == *lp++) { continue; }; return(0);
+	case CDOT: if (*lp++) { continue; }; return(0);
+	case CDOL: if (*lp==0) { continue; }; return(0);
+	case CEOF: loc2 = lp; return(1);
+	case CCL: if (cclass(ep, *lp++, 1)) { ep += *ep; continue; } return(0);
+	case NCCL: if (cclass(ep, *lp++, 0)) { ep += *ep; continue; } return(0);
+	case CBRA: braslist[*ep++] = lp; continue;
+	case CKET: braelist[*ep++] = lp; continue;
 	case CBACK:
 		if (braelist[i = *ep++]==0)
 			error(Q);
@@ -1569,18 +1500,8 @@ int advance(char *lp, char *ep)
 		}
 		continue;
 
-	case CDOT|STAR:
-		curlp = lp;
-		while (*lp++)
-			;
-		goto star;
-
-	case CCHR|STAR:
-		curlp = lp;
-		while (*lp++ == *ep)
-			;
-		ep++;
-		goto star;
+	case CDOT|STAR: curlp = lp; while (*lp++){}; goto star;
+	case CCHR|STAR: curlp = lp; while (*lp++ == *ep){}; ep++; goto star;
 
 	case CCL|STAR:
 	case NCCL|STAR:
@@ -1590,53 +1511,22 @@ int advance(char *lp, char *ep)
 		ep += *ep;
 		goto star;
 
-	star:
-		do {
-			lp--;
-			if (advance(lp, ep))
-				return(1);
-		} while (lp > curlp);
+	star: do { lp--; if (advance(lp, ep)) { return(1); } } while (lp > curlp);
 		return(0);
 
-	default:
-		error(Q);
+	default: error(Q);
 	}
 }
 
-int backref(int i, char *lp)
-{
-	char *bp;
-
-	bp = braslist[i];
-	while (*bp++ == *lp++)
-		if (bp >= braelist[i])
-			return(1);
+int backref(int i, char *lp){
+	char *bp = braslist[i];
+	while (*bp++ == *lp++){ if (bp >= braelist[i]){	{ return(1); } } }
 	return(0);
 }
 
-int cclass(char *set, int c, int af)
-{
-	int n;
-
-	if (c==0)
-		return(0);
+int cclass(char *set, int c, int af){ int n;
+	if (c==0) { return(0); }
 	n = *set++;
-	while (--n)
-		if (*set++ == c)
-			return(af);
+	while (--n) { if (*set++ == c) { return(af); } }
 	return(!af);
 }
-
-void putd(void)
-{
-	int r;
-
-	r = count%10;
-	count /= 10;
-	if (count)
-	putchar(r + '0');
-}
-
-char	line[70];
-char	*linp	= line;
-
