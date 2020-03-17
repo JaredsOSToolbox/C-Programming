@@ -1,5 +1,4 @@
-int advance(char *lp, char *ep)
-{
+int advance(char *lp, char *ep){
 	char *curlp;
 	int i;
 

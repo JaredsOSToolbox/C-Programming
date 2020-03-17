@@ -34,8 +34,12 @@ function testing_with_files_(){
   echo "[+] Contents of $target after beginning line replacement (^line --> LINE):"
   cat "$target"
 
-  echo -e ",s/re.*/restored/g\nw\q" | ./"$build_input_name" "$target"
-  echo "[+] Contents of $target after star line replacement (re.*ed --> restored):"
+  echo -e ",s/l.*e/out/g\nw\nq" | ./"$build_input_name" "$target"
+  echo "[+] Contents of $target after star line replacement (l.*e --> weirdness):"
+  cat "$target"
+  
+  echo -e ",s/(?<=L)(.*?)(?=E)/OUT/g\nw\nq" | ./"$build_input_name" "$target"
+  echo "[+] Contents of $target after look inside replacement (/L/,/E/ --> LOUTE):"
   cat "$target"
 
   rm "$target"
