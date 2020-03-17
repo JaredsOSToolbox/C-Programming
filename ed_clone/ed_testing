@@ -18,7 +18,7 @@ function testing_with_files_(){
 
   echo "[+] Building "$build_input" from source...."
 
-  clang -lm -g "$build_input" -o "$build_input_name" 2> warning_error_logs.txt && succ_ || err_
+  clang -Wall -Wextra -lm -g "$build_input" -o "$build_input_name" 2> warning_error_logs.txt && succ_ || err_
 
   cp "$target" ""$name"_cloned"
   target=""$name"_cloned"
@@ -38,19 +38,19 @@ function testing_with_files_(){
   echo "[+] Contents of $target after star line replacement (l.*e --> weirdness):"
   cat "$target"
   
-  echo -e ",s/(?<=L)(.*?)(?=E)/OUT/g\nw\nq" | ./"$build_input_name" "$target"
-  echo "[+] Contents of $target after look inside replacement (/L/,/E/ --> LOUTE):"
-  cat "$target"
+  #echo -e ",s/(?<=L)(.*?)(?=E)/OUT/g\nw\nq" | ./"$build_input_name" "$target"
+  #echo "[+] Contents of $target after look inside replacement (/L/,/E/ --> LOUTE):"
+  #cat "$target"
 
   rm "$target"
 }
 
 function testing_with_arguments_(){
   clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && succ_ || err_
-  ./ed_manip -i "^EXPRESSION" ./input.txt
+  ./ed_manip "^EXPRESSION" ./input.txt
 }
 
 [[ -z "$@" ]] && exit
 target="$1"
 name="$1:t:r"
-testing_with_files_ ./input.txt
+testing_with_arguments_  ./input.txt

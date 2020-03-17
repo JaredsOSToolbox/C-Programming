@@ -1,423 +1,45 @@
 // the ed editor stripped
 // Jared Dyreson
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include "edder.h"
 
-#include <signal.h>
-#include <setjmp.h>
+const int	NBLK = 2047; const int	FNSIZE = 128; const int	ESIZE	= 256, GBSIZE = 256; const int	BLKSIZE	= 4096, LBSIZE = 4096;
+const int	CBRA = 1; const int	CCHR = 2; const int	CDOT = 4; const int	NBRA = 5; const int	CCL	= 6; const int	CCIRC	= 15; const int	STAR	= 01; const int WRITE = 1;
+const int	NCCL = 8; const int	KSIZE = 9; const int	CDOL = 10; const int	CEOF = 11; const int	CKET	= 12; const int	CBACK	= 14; const int READ = 0;
 
-/* make BLKSIZE and LBSIZE 512 for smaller machines */
-#define	BLKSIZE	4096
-#define	NBLK	2047
-
-#define	FNSIZE	128
-#define	LBSIZE	4096
-#define	ESIZE	256
-#define	GBSIZE	256
-#define	NBRA	5
-#define	KSIZE	9
-
-#define	CBRA	1
-#define	CCHR	2
-#define	CDOT	4
-#define	CCL	6
-#define	NCCL	8
-#define	CDOL	10
-#define	CEOF	11
-#define	CKET	12
-#define	CBACK	14
-#define	CCIRC	15
-
-#define	STAR	01
-
-char	Q[]	= "";
-char	T[]	= "TMP";
-#define	READ	0
-#define	WRITE	1
+char	Q[]	= "", T[]	= "TMP";
 
 int	peekc, lastc, given;
 
-char	savedfile[FNSIZE];
-char	file[FNSIZE];
-char	linebuf[LBSIZE];
-char	rhsbuf[LBSIZE/2];
-char	expbuf[ESIZE+4];
-unsigned int	*addr1, *addr2;
-unsigned int	*dot, *dol, *zero;
-char	genbuf[LBSIZE];
+char	savedfile[FNSIZE], file[FNSIZE], linebuf[LBSIZE], rhsbuf[LBSIZE/2], expbuf[ESIZE+4], genbuf[LBSIZE], our_expression_buffer[BUFSIZ];
+unsigned int	*addr1, *addr2, *dot, *dol, *zero;
 long	count;
-char	*nextip;
-char	*linebp;
-int	ninbuf;
-int	io;
-int	pflag;
-
-int	read(int, char*, int);
-int	write(int, char*, int);
-
-int	vflag	= 1, oflag, listf, listn, col, tfile	= -1, tline;
-char	*globp, *tfname, *loc1, *loc2;
+char	*nextip, *linebp, *globp, *tfname, *loc1, *loc2;
+int	ninbuf, io, pflag, vflag	= 1, oflag, listf, listn, col, tfile	= -1, tline;
 
 char	ibuff[BLKSIZE];
-int	iblock	= -1;
 char	obuff[BLKSIZE];
-int	oblock	= -1;
-int	ichanged;
-int	nleft;
+
 int	names[26];
-int	anymarks;
-char	*braslist[NBRA];
-char	*braelist[NBRA];
-int	nbra;
-int	subnewa;
-int	subolda;
-int	fchange;
-int	wrapp;
-int	bpagesize = 20;
+int	iblock	= -1, oblock	= -1, ichanged, nleft, anymarks, nbra, subnewa, subolda, fchange, wrapp, bpagesize = 20;
+char	*braslist[NBRA], *braelist[NBRA];
 unsigned nlall = 128;
 
-char *getblock(unsigned int atl, int iof);
-char *getline_(unsigned int tl);
-char *place(char *sp, char *l1, char *l2);
-void add(int i);
-int advance(char *lp, char *ep);
-int append(int (*f)(void), unsigned int *a);
-int backref(int i, char *lp);
-void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
-void callunix(void);
-int cclass(char *set, int c, int af);
-void commands(void);
-void compile(int eof);
-int compsub(void);
-void dosub(void);
-void error(char *s);
-int execute(unsigned int *addr);
-void exfile(void);
-void filename(int comm);
-void gdelete(void);
-int getchr(void);
-int getcopy(void);
-int getfile(void);
-int getnum(void);
-int getsub(void);
-int gettty(void);
-int gety(void);
-void global(int k);
-void init(void);
-unsigned int *address(void);
-void join(void);
-void move(int cflag);
-void newline(void);
-void nonzero(void);
-void onhup(int n);
-void onintr(int n);
-void print(void);
-void putfile(void);
-int putline(void);
-void quit(int n);
-void rdelete(unsigned int *ad1, unsigned int *ad2);
-void reverse(unsigned int *a1, unsigned int *a2);
-void setwide(void);
-void setnoaddr(void);
-void squeeze(int i);
-void substitute(int inglob);
-
-jmp_buf	savej;
-
-typedef void	(*SIG_TYP)(int);
-
-SIG_TYP	oldhup;
-SIG_TYP	oldquit;
-
-/* these two are not in ansi, but we need them */
-#define	SIGHUP	1	/* hangup */
-#define	SIGQUIT	3	/* quit (ASCII FS) */
-
-int main(int argc, char *argv[])
-{
-	char *p1, *p2;
-	SIG_TYP oldintr;
-
-	oldquit = signal(SIGQUIT, SIG_IGN);
-	oldhup = signal(SIGHUP, SIG_IGN);
-	oldintr = signal(SIGINT, SIG_IGN);
-	if (signal(SIGTERM, SIG_IGN) == SIG_DFL)
-		signal(SIGTERM, quit);
-	argv++;
-	while (argc > 1 && **argv=='-') {
-		switch((*argv)[1]) {
-
-		case '\0':
-			vflag = 0;
-			break;
-
-		case 'q':
-			signal(SIGQUIT, SIG_DFL);
-			vflag = 1;
-			break;
-
-		case 'o':
-			oflag = 1;
-			break;
-		}
-		argv++;
-		argc--;
-	}
-	if (oflag) {
-		p1 = "/dev/stdout";
-		p2 = savedfile;
-		while (*p2++ = *p1++)
-			;
-	}
-	if (argc>1) {
-		p1 = *argv;
-		p2 = savedfile;
-		while (*p2++ = *p1++)
-			if (p2 >= &savedfile[sizeof(savedfile)])
-				p2--;
-		globp = "r";
-	}
+int main(int argc, char *argv[]){
+  if(argc != 3){
+    fprintf(stderr, "Usage: %s [pattern] [file path]\n", *argv);
+    exit(1);
+  }
 	zero = (unsigned *)malloc(nlall*sizeof(unsigned));
 	tfname = mkstemp("/tmp/ed_temp_file.txt");
+	argv++; strcpy(our_expression_buffer, *argv);
+  argv++; strcpy(savedfile, *argv);
+  printf("loaded file: %s\n", savedfile);
+  filename(savedfile);
 	init();
-	if (oldintr!=SIG_IGN)
-		signal(SIGINT, onintr);
-	if (oldhup!=SIG_IGN)
-		signal(SIGHUP, onhup);
-	setjmp(savej);
-	commands();
-	quit(0);
 	return 0;
 }
 
-void commands(void)
-{
-	unsigned int *a1;
-	int c;
-	int temp;
-	char lastsep;
-
-	for (;;) {
-	if (pflag) {
-		pflag = 0;
-		addr1 = addr2 = dot;
-		print();
-	}
-	c = '\n';
-	for (addr1 = 0;;) {
-		lastsep = c;
-		a1 = address();
-		c = getchr();
-		if (c!=',' && c!=';')
-			break;
-		if (lastsep==',')
-			error(Q);
-		if (a1==0) {
-			a1 = zero+1;
-			if (a1>dol)
-				a1--;
-		}
-		addr1 = a1;
-		if (c==';')
-			dot = a1;
-	}
-	if (lastsep!='\n' && a1==0)
-		a1 = dol;
-	if ((addr2=a1)==0) {
-		given = 0;
-		addr2 = dot;	
-	}
-	else
-		given = 1;
-	if (addr1==0)
-		addr1 = addr2;
-	switch(c) {
-
-	case 'a':
-		add(0);
-		continue;
-
-	case 'c':
-		nonzero();
-		newline();
-		rdelete(addr1, addr2);
-		append(gettty, addr1-1);
-		continue;
-
-	case 'd':
-		nonzero();
-		newline();
-		rdelete(addr1, addr2);
-		continue;
-
-	case 'E':
-		fchange = 0;
-		c = 'e';
-	case 'e':
-		setnoaddr();
-		if (vflag && fchange) {
-			fchange = 0;
-			error(Q);
-		}
-		filename(c);
-		init();
-		addr2 = zero;
-		goto caseread;
-
-	case 'f':
-		setnoaddr();
-		filename(c);
-		puts(savedfile);
-		continue;
-
-	case 'g':
-		global(1);
-		continue;
-
-	case 'i':
-		add(-1);
-		continue;
-
-
-	case 'j':
-		if (!given)
-			addr2++;
-		newline();
-		join();
-		continue;
-
-	case 'k':
-		nonzero();
-		if ((c = getchr()) < 'a' || c > 'z')
-			error(Q);
-		newline();
-		names[c-'a'] = *addr2 & ~01;
-		anymarks |= 01;
-		continue;
-
-	case 'm':
-		move(0);
-		continue;
-
-	case 'n':
-		listn++;
-		newline();
-		print();
-		continue;
-
-	case '\n':
-		if (a1==0) {
-			a1 = dot+1;
-			addr2 = a1;
-			addr1 = a1;
-		}
-		if (lastsep==';')
-			addr1 = a1;
-		print();
-		continue;
-
-	case 'l':
-		listf++;
-	case 'p':
-	case 'P':
-		newline();
-		print();
-		continue;
-
-	case 'Q':
-		fchange = 0;
-	case 'q':
-		setnoaddr();
-		newline();
-		quit(0);
-
-	case 'r':
-		filename(c);
-	caseread:
-		if ((io = open(file, 0)) < 0) {
-			lastc = '\n';
-			error(file);
-		}
-		setwide();
-		squeeze(0);
-		ninbuf = 0;
-		c = zero != dol;
-		append(getfile, addr2);
-		exfile();
-		fchange = c;
-		continue;
-
-	case 's':
-		nonzero();
-		substitute(globp!=0);
-		continue;
-
-	case 't':
-		move(1);
-		continue;
-
-	case 'u':
-		nonzero();
-		newline();
-		if ((*addr2&~01) != subnewa)
-			error(Q);
-		*addr2 = subolda;
-		dot = addr2;
-		continue;
-
-	case 'v':
-		global(0);
-		continue;
-
-	case 'W':
-		wrapp++;
-	case 'w':
-		setwide();
-		squeeze(dol>zero);
-		if ((temp = getchr()) != 'q' && temp != 'Q') {
-			peekc = temp;
-			temp = 0;
-		}
-		filename(c);
-		if(!wrapp ||
-		  ((io = open(file,1)) == -1) ||
-		  ((lseek(io, 0L, 2)) == -1))
-			if ((io = creat(file, 0666)) < 0)
-				error(file);
-		wrapp = 0;
-		if (dol > zero)
-			putfile();
-		exfile();
-		if (addr1<=zero+1 && addr2==dol)
-			fchange = 0;
-		if (temp == 'Q')
-			fchange = 0;
-		if (temp)
-			quit(0);
-		continue;
-
-	case '=':
-		setwide();
-		squeeze(0);
-		newline();
-		count = addr2 - zero;
-		
-		putchar('\n');
-		continue;
-
-	case '!':
-		callunix();
-		continue;
-
-	case EOF:
-		return;
-
-	}
-	error(Q);
-	}
-}
 
 void print(void)
 {
@@ -536,11 +158,7 @@ void setwide(void)
 	}
 }
 
-void setnoaddr(void)
-{
-	if (given)
-		error(Q);
-}
+void setnoaddr(void){ {if (given) { error(Q); }} }
 
 void nonzero(void)
 {
@@ -608,23 +226,7 @@ void filename(int comm)
 	}
 }
 
-void exfile(void)
-{
-	close(io);
-	io = -1;
-	if (vflag) {
-		
-		putchar('\n');
-	}
-}
-
-void onintr(int n)
-{
-	signal(SIGINT, onintr);
-	putchar('\n');
-	lastc = '\n';
-	error(Q);
-}
+void exfile(void){ close(io); io = -1; if (vflag) { putchar('\n'); } }
 
 void onhup(int n)
 {
@@ -825,28 +427,6 @@ void add(int i)
 	squeeze(0);
 	newline();
 	append(gettty, addr2);
-}
-
-void callunix(void)
-{
-	SIG_TYP savint;
-	int pid, rpid;
-	int retcode;
-
-	setnoaddr();
-	if ((pid = fork()) == 0) {
-		signal(SIGHUP, oldhup);
-		signal(SIGQUIT, oldquit);
-		execl("/bin/sh", "sh", "-t", 0);
-		exit(0100);
-	}
-	savint = signal(SIGINT, SIG_IGN);
-	while ((rpid = wait(&retcode)) != pid && rpid != -1)
-		;
-	signal(SIGINT, savint);
-	if (vflag) {
-		puts("!");
-	}
 }
 
 void quit(int n)
@@ -1050,7 +630,6 @@ void global(int k)
 			*a1 &= ~01;
 			dot = a1;
 			globp = globuf;
-			commands();
 			a1 = zero;
 		}
 	}
