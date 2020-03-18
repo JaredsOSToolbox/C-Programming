@@ -23,7 +23,7 @@ void count(){
 
 // Identify the SL functions that do the following
 // (2) Find the first character c in a const char* s ------> strchr (<string.h>)
-// (3) Find the length of the prefix of const char* s that has characters in const char* t --------> 
+// (3) Find the length of the prefix of const char* s that has characters in const char* t --------> strcspn (<string.h>)
 // (4) Terminates a program immediately ------> exit (<stdlib.h>)
 // (5) Open the file "midterm.txt" in read mode ---> fopen
 
@@ -149,6 +149,8 @@ void square_tests(){
 // END SQUARE ADT IMPLEMENTATION
 
 int main(){
+  // ucomment to test first function in this exam
+  /*count();*/
   square_tests();
   return 0;
 }
