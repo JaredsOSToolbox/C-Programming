@@ -37,3 +37,7 @@ Defined macros and their meanings:
 - [Computer Hope Article on 'ed'](https://www.computerhope.com/unix/ued.htm)
 - [Linux Die Manual Page](https://linux.die.net/man/1/ed)
 
+# Using git
+
+- [How can I restore a previous version of my project](https://www.git-tower.com/learn/git/faq/restore-repo-to-previous-revision)
+- [Git commit history](https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History)
