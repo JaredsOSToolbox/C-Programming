@@ -25,4 +25,15 @@ Defined macros and their meanings:
 
 - CCIRC: "^" symbol is ingested and this regex symbol denotes the beginning of a line. We want to peek forward to see the value after the carat. For example, "^Hello" will match "Hello World" but not "World, Hello" and the value of peek char would be "H".
 - CEOF: signals that we are at the end of the file. We only need this for reading from STDIN.
-- 
+
+
+
+
+# External Links
+
+- [ED Regular Expression Syntax Documentation](https://www.gnu.org/software/gnulib/manual/html_node/ed-regular-expression-syntax.html)
+- [GNU 'ed' Manual](https://www.gnu.org/software/ed/manual/ed_manual.html)
+- [Using 'ed' YouTube video](https://www.youtube.com/watch?v=UQOHNT36ioQ)
+- [Computer Hope Article on 'ed'](https://www.computerhope.com/unix/ued.htm)
+- [Linux Die Manual Page](https://linux.die.net/man/1/ed)
+
