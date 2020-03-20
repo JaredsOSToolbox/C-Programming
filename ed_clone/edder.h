@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <setjmp.h>
-int	read(int, char*, int);
-int	write(int, char*, int);
+#include <unistd.h>
+
+//int	edder_read(int, char*, int);
+//int	edder_write(int, char*, int);
 char *getblock(unsigned int atl, int iof);
 char *getline_(unsigned int tl);
 char *place(char *sp, char *l1, char *l2);
@@ -28,8 +30,6 @@ int getcopy(void);
 int getfile(void);
 int getnum(void);
 int getsub(void);
-int gettty(void);
-int gety(void);
 void global(int k);
 void init(void);
 unsigned int *address(void);
@@ -51,3 +51,6 @@ void squeeze(int i);
 void substitute(int inglob);
 jmp_buf	savej;
 typedef void	(*SIG_TYP)(int);
+void zero_squeeze(void){ squeeze(0); }
+void grepping();
+void read_in_file(char* input);
