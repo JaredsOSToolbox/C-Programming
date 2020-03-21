@@ -2,7 +2,7 @@
 
 function succ_(){
   echo "[+] BUILD SUCCEEDED!"
-  echo "[+] Number of non blank lines: $(cat ed_manip.c | sed '/^\s*#/d;/^\s*$/d' | wc -l)"
+  echo "[+] Number of non blank lines: $(cat ed_manip.c edder.h |  sed '/^\s*#/d;/^\s*$/d' | wc -l)"
 }
 
 function err_(){
