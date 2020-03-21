@@ -47,7 +47,7 @@ function testing_with_files_(){
 
 function testing_with_arguments_(){
   clang -lm -g "ed_manip.c" -o "ed_manip" 2> warning_error_logs.txt && succ_ || err_
-  ./ed_manip "^ed" ./hello.md
+  ./ed_manip "^yes" ./input.txt
 }
 
 [[ -z "$@" ]] && exit

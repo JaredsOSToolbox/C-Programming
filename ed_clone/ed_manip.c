@@ -43,8 +43,10 @@ int main(int argc, char *argv[]){
 	return 0;
 }
 
-int getch_(void) { 
-  return (buffer_pointer > 0) ? buf[--buffer_pointer] : getchar() & 0177;
+int getch_(void) {
+  /*printf("current value of the buffer: %s\n", buf);*/
+  /*printf("current value of the buffer pointer: %d\n", buffer_pointer);*/
+  return (buffer_pointer > 0) ? buf[--buffer_pointer] : '\n' & 0177;
 }
 void ungetch_(int c) {
   if (buffer_pointer >= BUFSIZ) { fprintf(stderr, "ungetch: too many characters\n");  return; }
@@ -67,17 +69,14 @@ void read_in_file(char* input){
 }
 
 void grepping(){
-   /*contents of the file*/
-  /*printf("Content: %s\n", file_contents);*/
-  char b[GBSIZE];
-  snprintf(b, sizeof(b), "/%s", our_expression_buffer);
-  const char* p = b + strlen(b) - 1;
-  while (p >= b) { ungetch_(*p--); }  
-  global(1);
-  /*ungetch_('\n');*/
+  char buf[GBSIZE];
+  snprintf(buf, sizeof(buf), "/%s\n", our_expression_buffer);
+  printf("g%s", buf);  const char* p = buf + strlen(buf) - 1;
+  while (p >= buf) { ungetch_(*p--); }  global(1);
+
   /*char temp[BUFSIZ] = "/"; strcat(temp, our_expression_buffer);*/
   /*size_t size_ = strlen(temp);*/
-  /*while(size_ > 0){ putc(temp[size_], stdout); ungetch_(temp[size_--]); }*/
+  /*while(size_ > 0){ ungetch_(temp[size_--]); }*/
   /*ungetch_('/');*/
   /*global(1);*/
 }
@@ -250,7 +249,7 @@ void error(char *s){
 }
 
 int getchr(void){ char c;
-	if (lastc=peekc) { peekc = 0; return(lastc); }
+	if ((lastc=peekc)) { peekc = 0; return(lastc); }
 	if (globp) {
 		if ((lastc = *globp++) != 0) { return(lastc); }
 		globp = 0;
@@ -271,10 +270,7 @@ int getfile(void){
 					puts("'\\n' appended");
 					*file_contents = '\n';
 				}
-        else{
-          printf("got to eof\n");
-          return(EOF);
-        }
+        else{ return(EOF); }
 			fp = file_contents;
 			while(fp < &file_contents[ninbuf]) {
 				if (*fp++ & 0200)
@@ -313,7 +309,6 @@ void putfile(void)
 			if (--nib < 0) {
 				n = fp-file_contents;
 				if(write(io, file_contents, n) != n) {
-          printf("WRITE ERROR\n");
 					error(Q);
 				}
 				nib = BLKSIZE-1;
@@ -328,7 +323,6 @@ void putfile(void)
 	} while (a1 <= addr2);
 	n = fp-file_contents;
 	if(write(io, file_contents, n) != n) {
-		printf("WRITE ERROR\n");
 		error(Q);
 	}
 }
@@ -402,7 +396,7 @@ getline_(unsigned int tl)
 	bp = getblock(tl, READ);
 	nl = nleft;
 	tl &= ~((BLKSIZE/2)-1);
-	while (*lp++ = *bp++)
+	while ((*lp++ = *bp++))
 		if (--nl == 0) {
 			bp = getblock(tl+=(BLKSIZE/2), READ);
 			nl = nleft;
@@ -496,29 +490,17 @@ void init(void)
 	dot = dol = zero;
 }
 
-void global(int k)
-{
+void global(int k){
 	char *gp;
 	int c;
 	unsigned int *a1;
 	char globuf[GBSIZE];
-
-  if (globp){
-    printf("globp error!\n");
-		error(Q);
-  }
-	setwide();
-	squeeze(dol>zero);
-  printf("our expression: %s\n", our_expression_buffer);
-  if ((c=getchr())=='\n'){ error(Q);} printf("compiling......\n"); compile(c); printf("done compiling....\n"); gp = globuf;
+  if (globp){ error(Q); } setwide(); squeeze(dol>zero);
+  if ((c=getchr())=='\n'){ error(Q);} compile(c); gp = globuf;
 	while ((c = getchr()) != '\n') {
-    if (c==EOF){
-      printf("reached EOF!\n");
-      error(Q);
-      quit(-1);
-    }
+    if (c==EOF){ error(Q); }
 		if (c=='\\') {
-			c = getchr();
+    c = getchr();
 			if (c!='\n')
 				*gp++ = '\\';
 		}
@@ -527,8 +509,9 @@ void global(int k)
 			error(Q);
     }
 	}
-	if (gp == globuf)
+  if (gp == globuf){
 		*gp++ = 'p';
+  }
 	*gp++ = '\n';
 	*gp++ = 0;
 	for (a1=zero; a1<=dol; a1++) {
@@ -542,6 +525,7 @@ void global(int k)
 			dot = a1;
 			globp = globuf;
 			a1 = zero;
+      commands();
 		}
 	}
 }
@@ -758,18 +742,14 @@ int getcopy(void)
 
 void compile(int eof)
 {
-  printf("top of the compile function!\n");
 	int c;
-	char *ep = expbuf;
-	char *lastep;
+	char *ep = expbuf, *lastep;
 	char bracket[NBRA], *bracketp = bracket;
 	int cclcnt;
-	if ((c = getchr()) == '\n') { printf("newline!\n"); peekc = c; c = eof; }
-  printf("current contents of c: %c\n", c);
-  if(c == '\0'){ printf("null terminating byte!\n"); }
+	if ((c = getchr()) == '\n') { peekc = c; c = eof; }
 	if (c == eof) { if (*ep==0){ error(Q); } return; }
 	nbra = 0;
-	if (c=='^') { c = getchr(); printf("after get char\n"); *ep++ = CCIRC; }; peekc = c; lastep = 0;
+	if (c=='^') { c = getchr(); *ep++ = CCIRC; }; peekc = c; lastep = 0;
 	for (;;) {
     if (ep >= &expbuf[ESIZE]){ cerror_(); }
 		c = getchr();
@@ -822,18 +802,13 @@ void compile(int eof)
 
 		case '*':
 			if (lastep==0 || *lastep==CBRA || *lastep==CKET){ break; }
-				/*goto defchar;*/
 			*lastep |= STAR;
 			continue;
 
 		case '$':
 			if ((peekc=getchr()) != eof && peekc!='\n'){ break; }
-				/*goto defchar;*/
 			*ep++ = CDOL;
 			continue;
-    case '\0':
-      printf("got to the end of the string");
-      break;
 
 		case '[':
 			*ep++ = CCL;
@@ -871,20 +846,14 @@ void compile(int eof)
 		default:
 			*ep++ = CCHR;
 			*ep++ = c;
-      printf("current contents of: %c\n", c);
 		}
 	}
-  printf("end of the compile function!\n");
 }
 
 
-int execute(unsigned int *addr)
-{
-  printf("got inside execute!\n");
-  printf("contens of expbuf: %s\n", expbuf);
+int execute(unsigned int *addr){
 	char *current_line_content, *current_regular_expression_text;
 	int c;
-
 	for (c=0; c<NBRA; c++) {
 		braslist[c] = 0;
 		braelist[c] = 0;
@@ -898,8 +867,6 @@ int execute(unsigned int *addr)
 		return(0);
   else{
 		current_line_content = getline_(*addr);
-    printf("contents of current_line_content: %s\n", current_line_content);
-    printf("contents of current_regular_expression_text: %s\n", current_regular_expression_text);
   }
 	if (*current_regular_expression_text==CCIRC) {
 		loc1 = current_line_content;
@@ -928,7 +895,8 @@ int execute(unsigned int *addr)
 	return(0);
 }
 
-int advance(char *lp, char *ep){ char *curlp; int i;
+int advance(char *lp, char *ep){ 
+  char *curlp; int i;
 	for (;;) switch (*ep++) {
 	case CCHR: if (*ep++ == *lp++) { continue; }; return(0);
 	case CDOT: if (*lp++) { continue; }; return(0);
