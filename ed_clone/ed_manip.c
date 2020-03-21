@@ -272,24 +272,6 @@ void quit(int n)
 	exit(0);
 }
 
-void rdelete(unsigned int *ad1, unsigned int *ad2)
-{
-	unsigned int *a1, *a2, *a3;
-
-	a1 = ad1;
-	a2 = ad2+1;
-	a3 = dol;
-	dol -= a2 - a1;
-	do {
-		*a1++ = *a2++;
-	} while (a2 <= a3);
-	a1 = ad1;
-	if (a1 > dol)
-		a1 = dol;
-	dot = a1;
-	fchange = 1;
-}
-
 char *
 getline_(unsigned int tl)
 {
@@ -423,52 +405,6 @@ void global(int k){
 }
 
 
-void substitute(int inglob)
-{
-	int *mp, nl, n, gsubf;
-	unsigned int *a1;
-
-	n = getnum();	/* OK even if n==0 */
-	gsubf = compsub();
-	for (a1 = addr1; a1 <= addr2; a1++) {
-		if (execute(a1)){
-			unsigned *ozero;
-			int m = n;
-			do {
-				int span = loc2-loc1;
-				if (--m <= 0) {
-					dosub();
-					if (!gsubf)
-						break;
-					if (span==0) {	/* null RE match */
-						if (*loc2=='\0')
-							break;
-						loc2++;
-					}
-				}
-			} while (execute((unsigned *)0));
-			if (m <= 0) {
-				inglob |= 01;
-				subnewa = putline();
-				*a1 &= ~01;
-				if (anymarks) {
-					for (mp = names; mp < &names[26]; mp++)
-						if (*mp == *a1)
-							*mp = subnewa;
-				}
-				subolda = *a1;
-				*a1 = subnewa;
-				ozero = zero;
-				nl = append(getsub, a1);
-				nl += zero-ozero;
-				a1 += nl;
-				addr2 += nl;
-			}
-		}
-	}
-	if (inglob==0)
-		error(Q);
-}
 
 int compsub(void)
 {
@@ -554,85 +490,30 @@ void dosub(void)
 		;
 }
 
-char *
-place(char *sp, char *l1, char *l2)
-{
-
+char* place(char *sp, char *l1, char *l2){
 	while (l1 < l2) {
 		*sp++ = *l1++;
-		if (sp >= &file_contents[LBSIZE])
-			error(Q);
-	}
-	return(sp);
+		if (sp >= &file_contents[LBSIZE]){ error(Q); }
+	} return(sp);
 }
 
-void move(int cflag)
-{
-	unsigned int *adt, *ad1, *ad2;
 
-	nonzero();
-	if ((adt = address())==0)	/* address() guarantees addr is in range */
-		error(Q);
-	newline();
-	if (cflag) {
-		unsigned int *ozero;
-		int delta;
-
-		ad1 = dol;
-		ozero = zero;
-		append(getcopy, ad1++);
-		ad2 = dol;
-		delta = zero - ozero;
-		ad1 += delta;
-		adt += delta;
-	} else {
-		ad2 = addr2;
-		for (ad1 = addr1; ad1 <= ad2;)
-			*ad1++ &= ~01;
-		ad1 = addr1;
-	}
-	ad2++;
-	if (adt<ad1) {
-		dot = adt + (ad2-ad1);
-		if ((++adt)==ad1)
-			return;
-		reverse(adt, ad1);
-		reverse(ad1, ad2);
-		reverse(adt, ad2);
-	} else if (adt >= ad2) {
-		dot = adt++;
-		reverse(ad1, ad2);
-		reverse(ad2, adt);
-		reverse(ad1, adt);
-	} else
-		error(Q);
-	fchange = 1;
-}
-
-void reverse(unsigned int *a1, unsigned int *a2)
-{
+void reverse(unsigned int *a1, unsigned int *a2){
 	int t;
-
 	for (;;) {
 		t = *--a2;
-		if (a2 <= a1)
-			return;
-		*a2 = *a1;
-		*a1++ = t;
+		if (a2 <= a1){ return; }
+		*a2 = *a1; *a1++ = t;
 	}
 }
 
-int getcopy(void)
-{
-	if (addr1 > addr2)
-		return(EOF);
+int getcopy(void){ if (addr1 > addr2){ return(EOF); }
 	getline_(*addr1++);
 	return(0);
 }
 
-void compile(int eof)
-{
-	int c;
+void compile(int eof){
+	int c, cclc;
 	char *ep = expbuf, *lastep;
 	char bracket[NBRA], *bracketp = bracket;
 	int cclcnt;
@@ -796,39 +677,21 @@ int advance(char *lp, char *ep){
 	case NCCL: if (cclass(ep, *lp++, 0)) { ep += *ep; continue; } return(0);
 	case CBRA: braslist[*ep++] = lp; continue;
 	case CKET: braelist[*ep++] = lp; continue;
-	case CBACK:
-		if (braelist[i = *ep++]==0)
-			error(Q);
-		if (backref(i, lp)) {
-			lp += braelist[i] - braslist[i];
-			continue;
-		}
+	case CBACK: if (braelist[i = *ep++]==0){ error(Q); }
+		if (backref(i, lp)) { lp += braelist[i] - braslist[i]; continue; }
 		return(0);
-
 	case CBACK|STAR:
-		if (braelist[i = *ep++] == 0)
-			error(Q);
+		if (braelist[i = *ep++] == 0){ error(Q); }
 		curlp = lp;
-		while (backref(i, lp))
-			lp += braelist[i] - braslist[i];
-		while (lp >= curlp) {
-			if (advance(lp, ep))
-				return(1);
+    while (backref(i, lp)){ lp += braelist[i] - braslist[i]; }
+		while (lp >= curlp) { if (advance(lp, ep)){ return(1); }
 			lp -= braelist[i] - braslist[i];
 		}
 		continue;
-
 	case CDOT|STAR: curlp = lp; while (*lp++){}; goto star;
 	case CCHR|STAR: curlp = lp; while (*lp++ == *ep){}; ep++; goto star;
-
 	case CCL|STAR:
-	case NCCL|STAR:
-		curlp = lp;
-		while (cclass(ep, *lp++, ep[-1]==(CCL|STAR)))
-			;
-		ep += *ep;
-		goto star;
-
+	case NCCL|STAR: curlp = lp; while (cclass(ep, *lp++, ep[-1]==(CCL|STAR))){} ep += *ep; goto star;
 	star: do { lp--; if (advance(lp, ep)) { return(1); } } while (lp > curlp);
 		return(0);
 
@@ -849,51 +712,26 @@ int cclass(char *set, int c, int af){ int n;
 	return(!af);
 }
 
-void commands(void)
-{
+void commands(void){
 	unsigned int *a1;
-	int c;
-	int temp;
+	int c = '\n', temp;
 	char lastsep;
-
 	for (;;) {
-	if (pflag) {
-		pflag = 0;
-		addr1 = addr2 = dot;
-		print();
-	}
-	c = '\n';
-	for (addr1 = 0;;) {
-		lastsep = c;
-		a1 = address();
-		c = getchr();
-		if (c!=',' && c!=';')
-			break;
-		if (lastsep==',')
-			error(Q);
-		if (a1==0) {
-			a1 = zero+1;
-			if (a1>dol)
-				a1--;
-		}
+	if (pflag) { pflag = 0; addr1 = addr2 = dot; print(); }
+	for (addr1 = 0;;) { lastsep = c; a1 = address(); c = getchr();
+		if (c!=',' && c!=';'){ break; }
+		if (lastsep==','){ error(Q); }
+		if (a1==0) { a1 = zero+1; if (a1>dol){ a1--; } }
 		addr1 = a1;
-		if (c==';')
-			dot = a1;
+		if (c==';'){ dot = a1; }
 	}
-	if (lastsep!='\n' && a1==0)
-		a1 = dol;
-	if ((addr2=a1)==0) {
-		given = 0;
-		addr2 = dot;	
-	}
-	else
-		given = 1;
-	if (addr1==0)
-		addr1 = addr2;
+	if (lastsep!='\n' && a1==0){ a1 = dol; }
+	if ((addr2=a1)==0) { given = 0; addr2 = dot;	}
+	else { given = 1; }
+	if (addr1==0) { addr1 = addr2; }
   switch(c){
     case 'p': case 'P': newline(); print(); continue;
     case EOF: return;
   }
-
   }
 }

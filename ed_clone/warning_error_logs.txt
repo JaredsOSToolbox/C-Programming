@@ -7,82 +7,82 @@ ed_manip.c:53:13: warning: implicit declaration of function 'open' is invalid in
 ed_manip.c:153:37: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
                 addr1 = zero+1; addr2 = dol; io = creat("ed.hup", 0600);
                                                   ^
-ed_manip.c:323:13: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:305:13: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*bp = *lp++) {
                ~~~~^~~~~~~
-ed_manip.c:323:13: note: place parentheses around the assignment to silence this warning
+ed_manip.c:305:13: note: place parentheses around the assignment to silence this warning
         while (*bp = *lp++) {
                    ^
                (          )
-ed_manip.c:323:13: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:305:13: note: use '==' to turn this assignment into an equality comparison
         while (*bp = *lp++) {
                    ^
                    ==
-ed_manip.c:359:25: warning: incompatible pointer types passing 'ssize_t (int, const void *, size_t)' (aka 'long (int, const void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
+ed_manip.c:341:25: warning: incompatible pointer types passing 'ssize_t (int, const void *, size_t)' (aka 'long (int, const void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
                         blkio(iblock, ibuff, write);
                                              ^~~~~
 ./edder.h:17:36: note: passing argument to parameter 'iofcn' here
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
                                    ^
-ed_manip.c:362:21: warning: incompatible pointer types passing 'ssize_t (int, void *, size_t)' (aka 'long (int, void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
+ed_manip.c:344:21: warning: incompatible pointer types passing 'ssize_t (int, void *, size_t)' (aka 'long (int, void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
                 blkio(bno, ibuff, read);
                                   ^~~~
 ./edder.h:17:36: note: passing argument to parameter 'iofcn' here
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
                                    ^
-ed_manip.c:366:24: warning: incompatible pointer types passing 'ssize_t (int, const void *, size_t)' (aka 'long (int, const void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
+ed_manip.c:348:24: warning: incompatible pointer types passing 'ssize_t (int, const void *, size_t)' (aka 'long (int, const void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
                 blkio(oblock, obuff, write);
                                      ^~~~~
 ./edder.h:17:36: note: passing argument to parameter 'iofcn' here
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
                                    ^
-ed_manip.c:382:8: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:364:8: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
         close(creat(tfname, 0600)); tfile = open(tfname, 2); dot = dol = zero;
               ^
-ed_manip.c:382:38: warning: implicit declaration of function 'open' is invalid in C99 [-Wimplicit-function-declaration]
+ed_manip.c:364:38: warning: implicit declaration of function 'open' is invalid in C99 [-Wimplicit-function-declaration]
         close(creat(tfname, 0600)); tfile = open(tfname, 2); dot = dol = zero;
                                             ^
-ed_manip.c:518:33: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:454:33: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*current_line_content++ = *current_regular_expression_text++)
                ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ed_manip.c:518:33: note: place parentheses around the assignment to silence this warning
+ed_manip.c:454:33: note: place parentheses around the assignment to silence this warning
         while (*current_line_content++ = *current_regular_expression_text++)
                                        ^
                (                                                           )
-ed_manip.c:518:33: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:454:33: note: use '==' to turn this assignment into an equality comparison
         while (*current_line_content++ = *current_regular_expression_text++)
                                        ^
                                        ==
-ed_manip.c:534:11: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:470:11: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (c = *rp++&0377) {
                ~~^~~~~~~~~~~~
-ed_manip.c:534:11: note: place parentheses around the assignment to silence this warning
+ed_manip.c:470:11: note: place parentheses around the assignment to silence this warning
         while (c = *rp++&0377) {
                  ^
                (             )
-ed_manip.c:534:11: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:470:11: note: use '==' to turn this assignment into an equality comparison
         while (c = *rp++&0377) {
                  ^
                  ==
-ed_manip.c:548:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:484:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*sp++ = *lp++)
                ~~~~~~^~~~~~~
-ed_manip.c:548:15: note: place parentheses around the assignment to silence this warning
+ed_manip.c:484:15: note: place parentheses around the assignment to silence this warning
         while (*sp++ = *lp++)
                      ^
                (            )
-ed_manip.c:548:15: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:484:15: note: use '==' to turn this assignment into an equality comparison
         while (*sp++ = *lp++)
                      ^
                      ==
-ed_manip.c:553:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
+ed_manip.c:489:15: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
         while (*lp++ = *sp++)
                ~~~~~~^~~~~~~
-ed_manip.c:553:15: note: place parentheses around the assignment to silence this warning
+ed_manip.c:489:15: note: place parentheses around the assignment to silence this warning
         while (*lp++ = *sp++)
                      ^
                (            )
-ed_manip.c:553:15: note: use '==' to turn this assignment into an equality comparison
+ed_manip.c:489:15: note: use '==' to turn this assignment into an equality comparison
         while (*lp++ = *sp++)
                      ^
                      ==
