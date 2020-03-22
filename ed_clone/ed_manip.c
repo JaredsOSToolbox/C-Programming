@@ -3,25 +3,6 @@
 
 #include "edder.h"
 
-const int	NBLK = 2047; const int	FNSIZE = 128; const int	ESIZE	= 256, GBSIZE = 256; const int	BLKSIZE	= 4096, LBSIZE = 4096;
-const int	CBRA = 1; const int	CCHR = 2; const int	CDOT = 4; const int	NBRA = 5; const int	CCL	= 6; const int	CCIRC	= 15; const int	STAR	= 01; const int WRITE = 1;
-const int	NCCL = 8; const int	KSIZE = 9; const int	CDOL = 10; const int	CEOF = 11; const int	CKET	= 12; const int	CBACK	= 14; const int READ = 0;
-
-char	Q[]	= "", T[]	= "TMP";
-
-char	savedfile[FNSIZE], file[FNSIZE], linebuf[LBSIZE], rhsbuf[LBSIZE/2], expbuf[ESIZE+4], file_contents[LBSIZE], our_expression_buffer[BUFSIZ], buf[BUFSIZ], input[BUFSIZ], ibuff[BLKSIZE], obuff[BLKSIZE];
-unsigned int	*addr1, *addr2, *dot, *dol, *zero;
-long	count;
-char	*nextip, *linebp, *globp, *tfname, *loc1, *loc2;
-int	ninbuf, io, pflag, vflag	= 1, oflag, listf, listn, col, tfile	= -1, tline, buffer_pointer;
-
-int	names[26];
-int	iblock	= -1, oblock	= -1, ichanged, nleft, anymarks, nbra, subnewa, subolda, fchange, wrapp, bpagesize = 20, peekc, lastc, given;
-char	*braslist[NBRA], *braelist[NBRA];
-unsigned nlall = 128;
-
-
-
 int main(int argc, char *argv[]){
   if(argc != 3){ fprintf(stderr, "Usage: %s [pattern] [file path]\n", *argv); exit(1); }
 	zero = (unsigned *)malloc(nlall*sizeof(unsigned));
@@ -48,34 +29,25 @@ void ungetch_(int c) {
 }
 
 void read_in_file(char* input){
-  setnoaddr();
-  init();
-  addr2 = zero;
   if ((io = open(file, 0)) < 0) { lastc = '\n'; error(file); }
   setwide();
-  zero_squeeze();
   ninbuf = 0;
-  append(getfile, addr2);
-  exfile();
+  append(getfile, addr2); detach_file(); // read in the file and detach the file
   printf("Read in: %s\n", input); printf("\nContent of file: \n%s\n", file_contents);
 }
 
-void grepping(){
-  char buf[GBSIZE] = "/";
-  strncat(buf, our_expression_buffer, strlen(our_expression_buffer));
+void grepping(){ char buf[GBSIZE] = "/";
+  strncat(buf, our_expression_buffer, strlen(our_expression_buffer)); // we need to read in the regex backwards because getch_ is a stack based operation
   size_t s = strlen(buf); printf("regex: %s\n", buf);
   while(s-- > 0){ ungetch_(buf[s]); } global(1); // read regular expression into global and a lot of magic happens
 }
 
-
-void print(void){
-	unsigned int *a1; nonzero(); a1 = addr1;
+void print(void){ unsigned int *a1; nonzero(); a1 = addr1;
 	do {
 		if (listn) { count = a1-zero; putchar('\t'); }
 		puts(getline_(*a1++));
 	} while (a1 <= addr2);
-	dot = addr2;
-	listf = listn = pflag = 0;
+	dot = addr2; listf = listn = pflag = 0;
 }
 
 unsigned int * address(void){
@@ -85,38 +57,27 @@ unsigned int * address(void){
 		do c = getchr(); while (c==' ' || c=='\t');
 		if ('0'<=c && c<='9') {
 			peekc = c;
-			if (!opcnt)
-				a = zero;
+			if (!opcnt){ a = zero; }
 			a += sign*getnum();
 		} else switch (c) {
-		case '$':
-			a = dol; // fall through
-		case '.':
-			if (opcnt)
-				error(Q);
-			break;
+		case '$': a = dol; // fall through
+		case '.': if (opcnt) { error(Q); } break;
 		case '\'':
 			c = getchr();
-			if (opcnt || c<'a' || 'z'<c)
-				error(Q);
+			if (opcnt || c<'a' || 'z'<c){ error(Q); }
 			a = zero;
 			do a++; while (a<=dol && names[c-'a']!=(*a&~01));
 			break;
 		case '?': sign = -sign; // fall through
-		case '/':
-			compile(c); b = a;
-			for (;;) {
-				a += sign;
+		case '/': compile(c); b = a;
+			for (;;) { a += sign;
 				if (a<=zero) { a = dol; }
 				if (a>dol) { a = zero; }
 				if (execute(a)) { break; }
         if (a==b){ error(Q); }
-			}
-			break;
+			} break;
 		default:
-			if (nextopand == opcnt) {
-				a += sign; if (a<zero || dol<a) { continue; }
-			}
+			if (nextopand == opcnt) { a += sign; if (a<zero || dol<a) { continue; } }
 			if (c!='+' && c!='-' && c!='^') {
 				peekc = c;
 				if (opcnt==0) { a = 0; }
@@ -132,29 +93,23 @@ unsigned int * address(void){
 	error(Q); return 0;
 }
 
-
 void newline(void){ int c;
 	if ((c = getchr()) == '\n' || c == EOF) { return; }
-	if (c=='p' || c=='l' || c=='n') {
-		pflag++;
+	if (c=='p' || c=='l' || c=='n') { pflag++;
 		if (c=='l') { listf++; } else if (c=='n') { listn++; }
 		if ((c=getchr())=='\n') { return; }
 	} error(Q);
 }
 
+void detach_file(void){ close(io); io = -1; if (vflag) { putchar('\n'); } }
 
-void exfile(void){ close(io); io = -1; if (vflag) { putchar('\n'); } }
-
-// done
-void onhup(int n){
-	signal(SIGINT, SIG_IGN); signal(SIGHUP, SIG_IGN);
+void onhup(int n){ signal(SIGINT, SIG_IGN); signal(SIGHUP, SIG_IGN);
 	if (dol > zero) {
 		addr1 = zero+1; addr2 = dol; io = creat("ed.hup", 0600);
 		if (io > 0) { putfile(); }
 	} fchange = 0; quit(0);
 }
 
-// done
 void error(char *s){ int c;
 	wrapp = 0, listf = 0, listn = 0; count = 0; pflag = 0;
 	lseek(0, (long)0, 2);
@@ -165,7 +120,6 @@ void error(char *s){ int c;
   quit(-1);
 }
 
-// done
 int getchr(void){ char c;
 	if ((lastc=peekc)) { peekc = 0; return(lastc); }
 	if (globp) {
@@ -174,19 +128,16 @@ int getchr(void){ char c;
 	} return getch_();
 }
 
-
 int getfile(void){ int c; char *lp = linebuf, *fp = nextip;
 	do {
 		if (--ninbuf < 0) {
       if ((ninbuf = read(io, file_contents, LBSIZE)-1) < 0){
 				if (lp>linebuf) { puts("'\\n' appended"); *file_contents = '\n'; }
         else{ return(EOF); }
-      }
-			fp = file_contents;
+      } fp = file_contents;
 			while(fp < &file_contents[ninbuf]) { if (*fp++ & 0200){ break; } }
 			fp = file_contents;
-		}
-		c = *fp++;
+		} c = *fp++;
 		if (c=='\0'){ continue; }
 		if (c&0200 || lp >= &linebuf[LBSIZE]) { lastc = '\n'; error(Q); }
 		*lp++ = c; count++;
@@ -194,12 +145,10 @@ int getfile(void){ int c; char *lp = linebuf, *fp = nextip;
 	*--lp = 0; nextip = fp; return(0);
 }
 
-void putfile(void) {
-	unsigned int *a1 = addr1; int n, nib = BLKSIZE; char *fp = file_contents, *lp;
+void putfile(void) { unsigned int *a1 = addr1; int n, nib = BLKSIZE; char *fp = file_contents, *lp;
 	do { lp = getline_(*a1++);
 		for (;;) {
-			if (--nib < 0) {
-				n = fp-file_contents;
+			if (--nib < 0) { n = fp-file_contents;
 				if(write(io, file_contents, n) != n) { error(Q); }
 				nib = BLKSIZE-1; fp = file_contents;
 			} count++;
@@ -211,29 +160,17 @@ void putfile(void) {
 }
 
 int append(int (*f)(void), unsigned int *a){ unsigned int *a1, *a2, *rdot;
-	int nline = 0, tl;
-	dot = a;
+	int nline = 0, tl; dot = a;
 	while ((*f)() == 0) {
 		if ((dol-zero)+1 >= nlall) {
 			unsigned *ozero = zero;
-
 			nlall += 1024;
-			if ((zero = (unsigned *)realloc((char *)zero, nlall*sizeof(unsigned)))==NULL) {
-				error("MEM?");
-				onhup(0);
-			}
-			dot += zero - ozero;
-			dol += zero - ozero;
+			if ((zero = (unsigned *)realloc((char *)zero, nlall*sizeof(unsigned)))==NULL) { error("MEM?"); onhup(0); }
+			dot += zero - ozero; dol += zero - ozero;
 		}
-		tl = putline();
-		nline++;
-		a1 = ++dol;
-		a2 = a1+1;
-		rdot = ++dot;
-		while (a1 > rdot){ *--a2 = *--a1; }
-		*rdot = tl;
-	}
-	return(nline);
+		tl = putline(); nline++; a1 = ++dol; a2 = a1+1; rdot = ++dot;
+		while (a1 > rdot){ *--a2 = *--a1; } *rdot = tl;
+	} return(nline);
 }
 
 void quit(int n){ if (vflag && fchange && dol!=zero) { fchange = 0; error(Q); }
@@ -244,10 +181,7 @@ char * getline_(unsigned int tl) { char *bp = getblock(tl, READ), *lp = linebuf;
 	int nl = nleft;
 	tl &= ~((BLKSIZE/2)-1);
 	while ((*lp++ = *bp++))
-		if (--nl == 0) {
-			bp = getblock(tl+=(BLKSIZE/2), READ);
-			nl = nleft;
-		}
+		if (--nl == 0) { bp = getblock(tl+=(BLKSIZE/2), READ); nl = nleft; }
 	return(linebuf);
 }
 
@@ -256,12 +190,10 @@ int putline(void){ char *bp, *lp = linebuf; int nl = nleft;
 	fchange = 1;
 	bp = getblock(tl, WRITE);
 	tl &= ~((BLKSIZE/2)-1);
-
 	while (*bp = *lp++) {
 		if (*bp++ == '\n') { *--bp = 0; linebp = lp; break; }
 		if (--nl == 0) { bp = getblock(tl+=(BLKSIZE/2), WRITE); nl = nleft; } }
-	nl = tline;
-	tline += (((lp-linebuf)+03)>>1)&077776;
+	nl = tline; tline += (((lp-linebuf)+03)>>1)&077776;
 	return(nl);
 }
 
@@ -273,14 +205,11 @@ char * getblock(unsigned int atl, int iof){
 	if (bno==oblock){ return(obuff+off); }
 	if (iof==READ) {
 		if (ichanged) { blkio(iblock, ibuff, write); }
-		ichanged = 0; iblock = bno;
-		blkio(bno, ibuff, read);
-		return(ibuff+off);
-	}
+		ichanged = 0; iblock = bno; blkio(bno, ibuff, read);
+		return(ibuff+off); }
 	if (oblock>=0) { blkio(oblock, obuff, write); }
 	oblock = bno; return(obuff+off);
 }
-
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int)){ lseek(tfile, (long)b*BLKSIZE, 0);
 	if ((*iofcn)(tfile, buf, BLKSIZE) != BLKSIZE) { error(T); } }
 
@@ -290,67 +219,20 @@ void init(void){ int *markp; close(tfile); tline = 2;
 	close(creat(tfname, 0600)); tfile = open(tfname, 2); dot = dol = zero;
 }
 
-void global(int k){
-	char *gp;
-	int c;
-	unsigned int *a1;
-	char globuf[GBSIZE];
+void global(int k){ char *gp; int c; unsigned int *a1; char globuf[GBSIZE];
   if (globp){ error(Q); } setwide(); squeeze(dol>zero);
   if ((c=getchr())=='\n'){ error(Q);} compile(c); gp = globuf;
 	while ((c = getchr()) != '\n') {
     if (c==EOF){ error(Q); }
-		if (c=='\\') {
-    c = getchr();
-			if (c!='\n')
-				*gp++ = '\\';
-		}
-		*gp++ = c;
-    if (gp >= &globuf[GBSIZE-2]){
-			error(Q);
-    }
+		if (c=='\\') { c = getchr();
+			if (c!='\n'){ *gp++ = '\\'; }
+		} *gp++ = c;
+    if (gp >= &globuf[GBSIZE-2]){ error(Q); }
 	}
-  if (gp == globuf){
-		*gp++ = 'p';
-  }
-	*gp++ = '\n';
-	*gp++ = 0;
-	for (a1=zero; a1<=dol; a1++) {
-		*a1 &= ~01;
-		if (a1>=addr1 && a1<=addr2 && execute(a1)==k)
-			*a1 |= 01;
-	}
-	for (a1=zero; a1<=dol; a1++) {
-		if (*a1 & 01) {
-			*a1 &= ~01;
-			dot = a1;
-			globp = globuf;
-			a1 = zero;
-      commands();
-		}
-	}
-}
-
-
-
-int compsub(void) { int seof, c; char *p;
-	if ((seof = getchr()) == '\n' || seof == ' '){ error(Q); }
-	compile(seof);
-	p = rhsbuf;
-	for (;;) {
-		c = getchr();
-		if (c=='\\') { c = getchr() | 0200; }
-		if (c=='\n') {
-			if (globp && globp[0]){ c |= 0200; }
-			else { peekc = c; pflag++; break; }
-		}
-		if (c==seof){ break; }
-		*p++ = c;
-		if (p >= &rhsbuf[LBSIZE/2]){ error(Q); }
-	}
-	*p++ = 0;
-	if ((peekc = getchr()) == 'g') { peekc = 0; newline(); return(1); }
-	newline();
-	return(0);
+  if (gp == globuf){ *gp++ = 'p'; }
+	*gp++ = '\n'; *gp++ = 0;
+	for (a1=zero; a1<=dol; a1++) { *a1 &= ~01; if (a1>=addr1 && a1<=addr2 && execute(a1)==k){ *a1 |= 01; } }
+	for (a1=zero; a1<=dol; a1++) { if (*a1 & 01) { *a1 &= ~01; dot = a1; globp = globuf; a1 = zero; commands(); } }
 }
 
 void compile(int eof){ int c, cclc, cclcnt; char *ep = expbuf, *lastep;
@@ -362,98 +244,47 @@ void compile(int eof){ int c, cclc, cclcnt; char *ep = expbuf, *lastep;
 	for (;;) {
     if (ep >= &expbuf[ESIZE]){ cerror_(); }
 		c = getchr();
-		if (c == '\n') {
-			peekc = c;
-			c = eof;
-		}
+		if (c == '\n') { peekc = c; c = eof; }
 		if (c==eof) {
 			if (bracketp != bracket){ cerror_(); }
-			*ep++ = CEOF;
-			return;
+			*ep++ = CEOF; return;
 		}
-		if (c!='*')
-			lastep = ep;
+		if (c!='*'){ lastep = ep; }
 		switch (c) {
-
 		case '\\':
 			if ((c = getchr())=='(') {
-				if (nbra >= NBRA)
-					cerror_();
-				*bracketp++ = nbra;
-				*ep++ = CBRA;
-				*ep++ = nbra++;
-				continue;
+				if (nbra >= NBRA){ cerror_(); }
+				*bracketp++ = nbra; *ep++ = CBRA; *ep++ = nbra++; continue;
 			}
 			if (c == ')') {
-				if (bracketp <= bracket)
-					cerror_();
-				*ep++ = CKET;
-				*ep++ = *--bracketp;
-				continue;
+				if (bracketp <= bracket){ cerror_(); }
+				*ep++ = CKET; *ep++ = *--bracketp; continue;
 			}
-			if (c>='1' && c<'1'+NBRA) {
-				*ep++ = CBACK;
-				*ep++ = c-'1';
-				continue;
-			}
+			if (c>='1' && c<'1'+NBRA) { *ep++ = CBACK; *ep++ = c-'1'; continue; }
 			*ep++ = CCHR;
-			if (c=='\n')
-				cerror_();
-			*ep++ = c;
-			continue;
-
-		case '.':
-			*ep++ = CDOT;
-			continue;
-
+			if (c=='\n'){ cerror_(); }
+			*ep++ = c; continue;
+		case '.': *ep++ = CDOT; continue;
 		case '\n': cerror_();
+		case '*': if (lastep==0 || *lastep==CBRA || *lastep==CKET){ break; } *lastep |= STAR; continue;
+		case '$': if ((peekc=getchr()) != eof && peekc!='\n'){ break; } *ep++ = CDOL; continue;
 
-		case '*':
-			if (lastep==0 || *lastep==CBRA || *lastep==CKET){ break; }
-			*lastep |= STAR;
-			continue;
-
-		case '$':
-			if ((peekc=getchr()) != eof && peekc!='\n'){ break; }
-			*ep++ = CDOL;
-			continue;
-
-		case '[':
-			*ep++ = CCL;
-			*ep++ = 0;
-			cclcnt = 1;
-			if ((c=getchr()) == '^') {
-				c = getchr();
-				ep[-2] = NCCL;
-			}
+		case '[': *ep++ = CCL; *ep++ = 0; cclcnt = 1;
+			if ((c=getchr()) == '^') { c = getchr(); ep[-2] = NCCL; }
 			do {
-				if (c=='\n')
-					cerror_();
+				if (c=='\n'){ cerror_(); }
 				if (c=='-' && ep[-1]!=0) {
-					if ((c=getchr())==']') {
-						*ep++ = '-';
-						cclcnt++;
-						break;
+					if ((c=getchr())==']') { *ep++ = '-'; cclcnt++; break;
 					}
-					while (ep[-1]<c) {
-						*ep = ep[-1]+1;
-						ep++;
-						cclcnt++;
-						if (ep>=&expbuf[ESIZE])
-							cerror_();
+					while (ep[-1]<c) { *ep = ep[-1]+1; ep++; cclcnt++;
+						if (ep>=&expbuf[ESIZE]){ cerror_(); }
 					}
 				}
-				*ep++ = c;
-				cclcnt++;
-				if (ep >= &expbuf[ESIZE])
-					cerror_();
+				*ep++ = c; cclcnt++;
+				if (ep >= &expbuf[ESIZE]){ cerror_(); }
 			} while ((c = getchr()) != ']');
-			lastep[1] = cclcnt;
-			continue;
-
-		default:
-			*ep++ = CCHR;
-			*ep++ = c;
+			lastep[1] = cclcnt; continue;
+		default: *ep++ = CCHR; *ep++ = c;
 		}
 	}
 }
@@ -496,11 +327,8 @@ int advance(char *lp, char *ep){
 	case NCCL: if (cclass(ep, *lp++, 0)) { ep += *ep; continue; } return(0);
 	case CBRA: braslist[*ep++] = lp; continue;
 	case CKET: braelist[*ep++] = lp; continue;
-	case CBACK: if (braelist[i = *ep++]==0){ error(Q); }
-		if (backref(i, lp)) { lp += braelist[i] - braslist[i]; continue; }
-		return(0);
-	case CBACK|STAR:
-		if (braelist[i = *ep++] == 0){ error(Q); } curlp = lp;
+	case CBACK: if (braelist[i = *ep++]==0){ error(Q); } if (backref(i, lp)) { lp += braelist[i] - braslist[i]; continue; } return(0);
+	case CBACK|STAR: if (braelist[i = *ep++] == 0){ error(Q); } curlp = lp;
     while (backref(i, lp)){ lp += braelist[i] - braslist[i]; }
 		while (lp >= curlp) { if (advance(lp, ep)){ return(1); }
 			lp -= braelist[i] - braslist[i];
@@ -514,8 +342,7 @@ int advance(char *lp, char *ep){
 	}
 }
 
-int backref(int i, char *lp){
-	char *bp = braslist[i];
+int backref(int i, char *lp){ char *bp = braslist[i];
 	while (*bp++ == *lp++){ if (bp >= braelist[i]){	{ return(1); } } }
 	return(0);
 }
