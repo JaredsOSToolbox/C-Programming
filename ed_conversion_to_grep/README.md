@@ -39,6 +39,7 @@ Defined macros and their meanings:
 I would like to mention that I attempted to document how it works but quickly gave up due to the sheer volume of code that needed to be sifted through.
 Some of this I understand to a slight degree but a lot of this code I have absolutely **NO IDEA** how it works.
 I kept deleting functions and tested if the program still functioned as intended.
+For further development of this project, it would be advised to revert several one liners into multiple lines, **as the current state of affairs is unreadable**.
 
 # External Links
 
