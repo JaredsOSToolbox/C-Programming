@@ -1,45 +1,22 @@
-ed_manip.c:9:9: warning: incompatible integer to pointer conversion assigning to 'char *' from 'int' [-Wint-conversion]
+grep_.c:9:9: warning: incompatible integer to pointer conversion assigning to 'char *' from 'int' [-Wint-conversion]
         tfname = mkstemp("/tmp/ed_temp_file.txt");
                ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ed_manip.c:32:13: warning: implicit declaration of function 'open' is invalid in C99 [-Wimplicit-function-declaration]
-  if ((io = open(file, 0)) < 0) { lastc = '\n'; error(file); }
-            ^
-ed_manip.c:108:37: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
-                addr1 = zero+1; addr2 = dol; io = creat("ed.hup", 0600);
-                                                  ^
-ed_manip.c:193:13: warning: using the result of an assignment as a condition without parentheses [-Wparentheses]
-        while (*bp = *lp++) {
-               ~~~~^~~~~~~
-ed_manip.c:193:13: note: place parentheses around the assignment to silence this warning
-        while (*bp = *lp++) {
-                   ^
-               (          )
-ed_manip.c:193:13: note: use '==' to turn this assignment into an equality comparison
-        while (*bp = *lp++) {
-                   ^
-                   ==
-ed_manip.c:207:40: warning: incompatible pointer types passing 'ssize_t (int, const void *, size_t)' (aka 'long (int, const void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
+grep_.c:207:40: warning: incompatible pointer types passing 'ssize_t (int, const void *, size_t)' (aka 'long (int, const void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
                 if (ichanged) { blkio(iblock, ibuff, write); }
                                                      ^~~~~
-./edder.h:26:36: note: passing argument to parameter 'iofcn' here
+./grepper.h:27:36: note: passing argument to parameter 'iofcn' here
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
                                    ^
-ed_manip.c:208:49: warning: incompatible pointer types passing 'ssize_t (int, void *, size_t)' (aka 'long (int, void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
+grep_.c:208:49: warning: incompatible pointer types passing 'ssize_t (int, void *, size_t)' (aka 'long (int, void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
                 ichanged = 0; iblock = bno; blkio(bno, ibuff, read);
                                                               ^~~~
-./edder.h:26:36: note: passing argument to parameter 'iofcn' here
+./grepper.h:27:36: note: passing argument to parameter 'iofcn' here
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
                                    ^
-ed_manip.c:210:40: warning: incompatible pointer types passing 'ssize_t (int, const void *, size_t)' (aka 'long (int, const void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
+grep_.c:210:40: warning: incompatible pointer types passing 'ssize_t (int, const void *, size_t)' (aka 'long (int, const void *, unsigned long)') to parameter of type 'int (*)(int, char *, int)' [-Wincompatible-pointer-types]
         if (oblock>=0) { blkio(oblock, obuff, write); }
                                               ^~~~~
-./edder.h:26:36: note: passing argument to parameter 'iofcn' here
+./grepper.h:27:36: note: passing argument to parameter 'iofcn' here
 void blkio(int b, char *buf, int (*iofcn)(int, char*, int));
                                    ^
-ed_manip.c:219:8: warning: implicit declaration of function 'creat' is invalid in C99 [-Wimplicit-function-declaration]
-        close(creat(tfname, 0600)); tfile = open(tfname, 2); dot = dol = zero;
-              ^
-ed_manip.c:219:38: warning: implicit declaration of function 'open' is invalid in C99 [-Wimplicit-function-declaration]
-        close(creat(tfname, 0600)); tfile = open(tfname, 2); dot = dol = zero;
-                                            ^
-9 warnings generated.
+4 warnings generated.

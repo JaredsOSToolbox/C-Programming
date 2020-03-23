@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 const int	NBLK = 2047; const int	FNSIZE = 128; const int	ESIZE	= 256, GBSIZE = 256; const int	BLKSIZE	= 4096, LBSIZE = 4096;
 const int	CBRA = 1; const int	CCHR = 2; const int	CDOT = 4; const int	NBRA = 5; const int	CCL	= 6; const int	CCIRC	= 15; const int	STAR	= 01; const int WRITE = 1;
