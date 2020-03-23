@@ -1,5 +1,15 @@
 # Stripping ed
 
+## Building
+
+Please use the `grep_testing` script to build.
+If you're using a different shell interpreter other than `zsh`, please make the necessary changes to use this script.
+
+```bash
+# run the tests
+./grep_testing
+```
+
 ## REGEX testing
 
 - Find and replace all instances: `,s/line/replaced/g`
@@ -26,8 +36,9 @@ Defined macros and their meanings:
 - CCIRC: "^" symbol is ingested and this regex symbol denotes the beginning of a line. We want to peek forward to see the value after the carat. For example, "^Hello" will match "Hello World" but not "World, Hello" and the value of peek char would be "H".
 - CEOF: signals that we are at the end of the file. We only need this for reading from STDIN.
 
-
-
+I would like to mention that I attempted to document how it works but quickly gave up due to the sheer volume of code that needed to be sifted through.
+Some of this I understand to a slight degree but a lot of this code I have absolutely **NO IDEA** how it works.
+I kept deleting functions and tested if the program still functioned as intended.
 
 # External Links
 
