@@ -4,14 +4,12 @@
 #include "grepper.h"
 
 int main(int argc, char *argv[]){
-  if(argc != 3){ fprintf(stderr, "Usage: %s [pattern] [file path]\n", *argv); exit(1); }
-	zero = (unsigned *)malloc(nlall*sizeof(unsigned));
-	tfname = mkstemp("/tmp/ed_temp_file.txt");
-	argv++; strcpy(our_expression_buffer, *argv);
-  argv++; strcpy(savedfile, *argv); strcpy(file, *argv);
-  init();
-  read_in_file(savedfile);
-  grepping();
+  if(argc < 2 || argc == 2){ fprintf(stderr, "Usage: %s [pattern] [file(s) path]\n", *argv); exit(1); } // example: ./grep "^yes"
+  zero = (unsigned *)malloc(nlall*sizeof(unsigned));
+  tfname = mkstemp("/tmp/ed_temp_file.txt");
+  argv++; strcpy(our_expression_buffer, *argv++); argc--;
+  if(argc >= 3 || strcmp(*argv, "*") != 0){ while(*argv != NULL){ search_file(*argv++); for(int i = 0; i < 80; ++i){ putc('=', stdout); } putc('\n', stdout); } } // example ./grep "^yes" input.txt another.txt
+  else{ searchdir("."); } // example ./grep "^yes" \* (iterate over the entire directory structure)
 	return 0;
 }
 
@@ -21,6 +19,7 @@ void setwide(void){ if (!given) { addr1 = zero + (dol>zero); addr2 = dol; } }
 void setnoaddr(void){ { if (given) { error(Q); } } }
 void nonzero(void){ squeeze(1); }
 void squeeze(int i){ if (addr1<zero+i || addr2>dol || addr1>addr2) { error(Q); } }
+void search_file(char* file_name){ strcpy(savedfile, file_name); init(); read_in_file(file_name); grepping(); }
 
 int getch_(void) { return (buffer_pointer > 0) ? buf[--buffer_pointer] : '\n' & 0177; } // getch_ and ungetch_ <-- William McCarthy 2020
 void ungetch_(int c) {
@@ -29,9 +28,8 @@ void ungetch_(int c) {
 }
 
 void read_in_file(char* input){
-  if ((io = open(file, 0)) < 0) { lastc = '\n'; error(file); }
-  setwide();
-  ninbuf = 0;
+  if ((io = open(input, 0)) < 0) { lastc = '\n'; error(input); }
+  setwide(); ninbuf = 0;
   append(getfile, addr2); detach_file(); // read in the file and detach the file
   printf("Read in: %s\n", input); printf("\nContent of file: \n%s\n", file_contents);
 }
@@ -42,6 +40,19 @@ void grepping(){ char buf[GBSIZE] = "/";
   while(s-- > 0){ ungetch_(buf[s]); } global(1); // read regular expression into global and a lot of magic happens
 }
 
+void searchdir(const char *name){ // slightly adapted code <- https://stackoverflow.com/questions/8436841/how-to-recursively-list-directories-in-c-on-linux
+    DIR *dir; struct dirent *entry;
+    if (!(dir = opendir(name))){ return; }
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_DIR) {
+            char path[1024];
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){ continue; }
+            snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
+            searchdir(path);
+        } else { char fi[BUFSIZ]; snprintf(fi, sizeof(fi), "%s/%s",name, entry->d_name); search_file(fi); }
+    } closedir(dir);
+}
 void print(void){ unsigned int *a1; nonzero(); a1 = addr1;
 	do {
 		if (listn) { count = a1-zero; putchar('\t'); }
@@ -50,13 +61,11 @@ void print(void){ unsigned int *a1; nonzero(); a1 = addr1;
 	dot = addr2; listf = listn = pflag = 0;
 }
 
-unsigned int * address(void){
-	int sign = 1, opcnt = 0, nextopand = -1, c;
+unsigned int * address(void){ int sign = 1, opcnt = 0, nextopand = -1, c;
 	unsigned int *a = dot, *b;
 	do {
 		do c = getchr(); while (c==' ' || c=='\t');
-		if ('0'<=c && c<='9') {
-			peekc = c;
+		if ('0'<=c && c<='9') { peekc = c;
 			if (!opcnt){ a = zero; }
 			a += sign*getnum();
 		} else switch (c) {
@@ -101,11 +110,11 @@ void newline(void){ int c;
 	} error(Q);
 }
 
-void detach_file(void){ close(io); io = -1; if (vflag) { putchar('\n'); } }
+void detach_file(void){ close(io); io = -1; }
 
 void onhup(int n){ signal(SIGINT, SIG_IGN); signal(SIGHUP, SIG_IGN);
 	if (dol > zero) {
-		addr1 = zero+1; addr2 = dol; io = creat("ed.hup", 0600);
+		addr1 = zero+1; addr2 = dol; io = creat("grep.hup", 0600);
 		if (io > 0) { putfile(); }
 	} fchange = 0; quit(0);
 }

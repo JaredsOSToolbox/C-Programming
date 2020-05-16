@@ -1,9 +1,11 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <unistd.h>
+#include <dirent.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 const int	NBLK = 2047; const int	FNSIZE = 128; const int	ESIZE	= 256, GBSIZE = 256; const int	BLKSIZE	= 4096, LBSIZE = 4096;
 const int	CBRA = 1; const int	CCHR = 2; const int	CDOT = 4; const int	NBRA = 5; const int	CCL	= 6; const int	CCIRC	= 15; const int	STAR	= 01; const int WRITE = 1;
@@ -15,9 +17,9 @@ long	count;
 char	*nextip, *linebp, *globp, *tfname, *loc1, *loc2;
 int	ninbuf, io, pflag, vflag	= 1, oflag, listf, listn, col, tfile	= -1, tline, buffer_pointer;
 int	names[26];
-int	iblock	= -1, oblock	= -1, ichanged, nleft, anymarks, nbra, subnewa, subolda, fchange, wrapp, bpagesize = 20, peekc, lastc, given;
+int	iblock	= -1, oblock	= -1, ichanged, nleft, anymarks, nbra, subnewa, subolda, fchange, wrapp, bpagesize = 20, peekc, lastc, given, current_line_number = 0;
 char	*braslist[NBRA], *braelist[NBRA];
-unsigned nlall = 128;
+unsigned nlall = 10000;
 
 char *getblock(unsigned int atl, int iof);
 char *getline_(unsigned int tl);
@@ -50,4 +52,6 @@ void setnoaddr(void);
 void squeeze(int i);
 void zero_squeeze(void){ squeeze(0); }
 void grepping();
+void searchdir(const char *name);
+void search_file(char* file_name);
 void read_in_file(char* input);

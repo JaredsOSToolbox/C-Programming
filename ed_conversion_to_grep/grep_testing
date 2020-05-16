@@ -47,14 +47,18 @@ function testing_with_files_(){
 
 function testing_with_arguments_(){
   echo "[+] Building grep from source...."
-  clang -lm -g "grep_.c" -o "grep" 2> warning_error_logs.txt && succ_ || err_
+  clang -lm -g grep_.c -o grep 2> warning_error_logs.txt && succ_ || err_
   echo "[+] Running tests for grep_...."
-  ./grep "^yes" ./input.txt
-  echo "================================"
-  ./grep "^NO" ./input.txt
-  echo "================================"
-  ./grep "\$container" ./input.txt
+  ./grep "^yes" inputs/input.txt 
+  ./grep "^NO" inputs/input.txt another.txt
+  ./grep "\$container" inputs/input.txt another.txt
+  #echo "================================"
+  #./grep "^test" hello.txt input.txt
+  #echo "================================"
+  #./grep "^test" hello.txt input.txt another.txt
+  #echo "================================"
+  ##./grep "^test" *
 }
 
 testing_with_arguments_
-rm ./grep
+#rm ./grep
