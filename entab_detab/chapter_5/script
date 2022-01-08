@@ -1,7 +1,0 @@
-#!/usr/bin/env zsh
-
-clang -lm -Wunused-value -g detab.c -o detab
-clang -lm -Wunused-value -g entab.c -o entab
-
-# run cases
-[[ "$(echo -e "Hello\tWorld" | ./detab 1 | wc -c)" -eq 12 ]] && echo "Passed" || echo "Failed"

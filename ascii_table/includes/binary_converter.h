@@ -16,7 +16,7 @@
 int indexes[] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,   10, 11,
                  12, 13, 14, 15, 16, 17, 18, 19, 20, 21,  22, 23,
                  24, 25, 26, 27, 28, 29, 30, 31, 32, 127, 257};
-char* labels[] = {"NUL", "SOH", "STX", "ETX", "EOT",   "ENQ", "ACK",
+char *labels[] = {"NUL", "SOH", "STX", "ETX", "EOT",   "ENQ", "ACK",
                   "BEL", "BS",  "TAB", "LF",  "VT",    "FF",  "CR",
                   "SO",  "SI",  "DLE", "DC1", "DC2",   "DC3", "DC4",
                   "NAK", "SYN", "ETB", "CAN", "EM",    "SUB", "ESC",
@@ -24,136 +24,136 @@ char* labels[] = {"NUL", "SOH", "STX", "ETX", "EOT",   "ENQ", "ACK",
 
 // TL <- too long, not conventional ASCII
 
-char* convert_int_array(int array[]) {
-    char* pointer = (char*)malloc(BINARY_LEN + 1 * sizeof(char));
+char *convert_int_array(int array[]) {
+  char *pointer = (char *)malloc(BINARY_LEN + 1 * sizeof(char));
 
-    for (int i = 0; i < BINARY_LEN; ++i) {
-        if (array[i] == 1) {
-            pointer[i] = '1';
-        } else {
-            pointer[i] = '0';
-        }
-    }
-    return pointer;
-}
-
-char* look_up(int index, int indexes[], char* labels[]) {
-    bool state = IN;
-    for (int i = 0; i < LABEL_COUNT; ++i) {
-        if (indexes[i] == index) {
-            index = i;
-            state = OUT;
-            break;
-        }
-    }
-    if (state == IN) {
-        index = LABEL_COUNT;
-    }
-    int size = strlen(labels[index]);
-    char* pointer = (char*)malloc(size + 1 * sizeof(char));
-    strcpy(pointer, labels[index]);
-    return pointer;
-}
-
-void conversion(int array[], int base, FILE* output) {
-    int weight = 0;
-    int len = BINARY_LEN;
-
-    while (len-- > 0) {
-        weight += array[(BINARY_LEN - 1) - len] * (int)pow(2, len);
-    }
-
-    char* converted_array = convert_int_array(array);
-    bool parity = (weight % 2 == 0);
-    char* printable_char = (char*)malloc(1024 * sizeof(char));
-    char c = (char)weight;
-    if (!isprint(c)) {
-        if (weight > 127) {
-            weight = 257;
-        }
-        char* index = look_up(weight, indexes, labels);
-        if (index != NULL) {
-            strcpy(printable_char, index);
-            free(index);
-        } else {
-            fprintf(stderr, "Memory error!\n");
-            free(converted_array);
-            free(printable_char);
-            exit(1);
-        }
+  for (int i = 0; i < BINARY_LEN; ++i) {
+    if (array[i] == 1) {
+      pointer[i] = '1';
     } else {
-        printable_char[0] = c;
+      pointer[i] = '0';
     }
-    fprintf(output, "%s\t%s\t%d\t\t%s\n", converted_array, printable_char,
-            weight, parity ? "even" : "odd");
-    free(converted_array);
-    free(printable_char);
+  }
+  return pointer;
 }
 
-void print_level(FILE* output, char c, size_t level) {
-    for (int i = 0; i < level; ++i) {
-        fputc(c, output);
+char *look_up(int index, int indexes[], char *labels[]) {
+  bool state = IN;
+  for (int i = 0; i < LABEL_COUNT; ++i) {
+    if (indexes[i] == index) {
+      index = i;
+      state = OUT;
+      break;
     }
-    fputc('\n', output);
+  }
+  if (state == IN) {
+    index = LABEL_COUNT;
+  }
+  int size = strlen(labels[index]);
+  char *pointer = (char *)malloc(size + 1 * sizeof(char));
+  strcpy(pointer, labels[index]);
+  return pointer;
+}
+
+void conversion(int array[], int base, FILE *output) {
+  int weight = 0;
+  int len = BINARY_LEN;
+
+  while (len-- > 0) {
+    weight += array[(BINARY_LEN - 1) - len] * (int)pow(2, len);
+  }
+
+  char *converted_array = convert_int_array(array);
+  bool parity = (weight % 2 == 0);
+  char *printable_char = (char *)malloc(1024 * sizeof(char));
+  char c = (char)weight;
+  if (!isprint(c)) {
+    if (weight > 127) {
+      weight = 257;
+    }
+    char *index = look_up(weight, indexes, labels);
+    if (index != NULL) {
+      strcpy(printable_char, index);
+      free(index);
+    } else {
+      fprintf(stderr, "Memory error!\n");
+      free(converted_array);
+      free(printable_char);
+      exit(1);
+    }
+  } else {
+    printable_char[0] = c;
+  }
+  fprintf(output, "%s\t%s\t%d\t\t%s\n", converted_array, printable_char, weight,
+          parity ? "even" : "odd");
+  free(converted_array);
+  free(printable_char);
+}
+
+void print_level(FILE *output, char c, size_t level) {
+  for (int i = 0; i < level; ++i) {
+    fputc(c, output);
+  }
+  fputc('\n', output);
 }
 
 void print_int_array(int array[]) {
-    for (int i = 0; i < BINARY_LEN; ++i) {
-        fprintf(stdout, "%d", array[i]);
-    }
-    fprintf(stdout, "\n");
+  for (int i = 0; i < BINARY_LEN; ++i) {
+    fprintf(stdout, "%d", array[i]);
+  }
+  fprintf(stdout, "\n");
 }
 
-void process_file(FILE* input, FILE* output) {
-    char c;
-    bool state = OUT;
+void process_file(FILE *input, FILE *output) {
+  char c;
+  bool state = OUT;
 
-    int array[BINARY_LEN];
-    int i = 0;
-    memset(array, 0, sizeof(array) / sizeof(int));
-    const char* header = "Orig\t\tAscii\tBase-10\t\tParity";
-    fprintf(output, "%s\n", header);
-    print_level(output, '=', strlen(header) + 18);
+  int array[BINARY_LEN];
+  int i = 0;
+  memset(array, 0, sizeof(array) / sizeof(int));
+  const char *header = "Orig\t\tAscii\tBase-10\t\tParity";
+  fprintf(output, "%s\n", header);
+  print_level(output, '=', strlen(header) + 18);
 
-    while ((c = fgetc(input)) != EOF) {
-        if (isspace(c)) {
-            state = IN;
-            conversion(array, 2, output);
-            i = 0;
-            memset(array, 0, sizeof(array) / sizeof(int));
-        } else {
-            array[i++] = atoi(&c);
-        }
+  while ((c = fgetc(input)) != EOF) {
+    if (isspace(c)) {
+      state = IN;
+      conversion(array, 2, output);
+      i = 0;
+      memset(array, 0, sizeof(array) / sizeof(int));
+    } else {
+      array[i++] = atoi(&c);
     }
+  }
 }
 
-void generate_binary(FILE* destination, int s, int e) {
-    for (int j = s; j <= e; ++j) {
-        for (int i = 0; i < 8; ++i) {
-            fprintf(destination, "%d", !!((j << i) & 0x80));
-        }
-        fputc(' ', destination);
+void generate_binary(FILE *destination, int s, int e) {
+  for (int j = s; j <= e; ++j) {
+    for (int i = 0; i < 8; ++i) {
+      fprintf(destination, "%d", !!((j << i) & 0x80));
     }
+    fputc(' ', destination);
+  }
 }
 
 int value(char c) {
-    if (c >= '0' && c <= '9') {
-        return (int)c - '0';
-    }
-    return (int)c - 'A' + 10;
+  if (c >= '0' && c <= '9') {
+    return (int)c - '0';
+  }
+  return (int)c - 'A' + 10;
 }
 
-int to_base_n(char* string, int base) {
-    size_t len = strlen(string);
-    int power = 1;
-    int number = 0;
-    for (int i = (len - 1); i >= 0; --i) {
-        if (value(string[i]) >= base) {
-            fprintf(stderr, "Invalid number!\n");
-            return -1;
-        }
-        number += value(string[i]) * power;
-        power = power * base;
+int to_base_n(char *string, int base) {
+  size_t len = strlen(string);
+  int power = 1;
+  int number = 0;
+  for (int i = (len - 1); i >= 0; --i) {
+    if (value(string[i]) >= base) {
+      fprintf(stderr, "Invalid number!\n");
+      return -1;
     }
-    return number;
+    number += value(string[i]) * power;
+    power = power * base;
+  }
+  return number;
 }

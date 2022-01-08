@@ -1,13 +1,16 @@
 #include <stdio.h>
 
-unsigned rightroc(unsigned x, int n){   
-    while (n-- > 0)
-        if(x & 1) { x = (x >> 1) | ~(~0U >> 1); }
-        else { x = x >> 1; }
-    return x;
+unsigned rightroc(unsigned x, int n) {
+  while (n-- > 0)
+    if (x & 1) {
+      x = (x >> 1) | ~(~0U >> 1);
+    } else {
+      x = x >> 1;
+    }
+  return x;
 }
 
-int main(int argc, const char* argv[]){
+int main(int argc, const char *argv[]) {
   fprintf(stdout, "%u\n", rightroc(5732, 3));
   return 0;
 }
