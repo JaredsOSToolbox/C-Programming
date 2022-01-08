@@ -1,4 +1,7 @@
-# Stripping ed
+# Stripping grep from ed
+
+Princeton assignment to obtain the regular expression library from the text editor `ed`.
+The original assignment required it to be under 400 lines of code, however, I am going to use `clang-format` to make it readable.
 
 ## Building
 

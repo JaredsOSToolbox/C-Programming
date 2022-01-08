@@ -5,7 +5,7 @@
 function succ_(){
   # Checking how many lines both source files had
   echo "[+] BUILD SUCCEEDED!: ($(tail -n1 warning_error_logs.txt))"
-  echo "[+] Number of non blank lines: $(cat grep_.c grepper.h |  sed '/^\s*#/d;/^\s*$/d' | wc -l)"
+  echo "[+] Number of non blank lines: $(cat "src/grep.c" "includes/grep.h"	|  sed '/^\s*#/d;/^\s*$/d' | wc -l)"
 }
 
 function err_(){
@@ -17,7 +17,7 @@ function err_(){
 
 function testing_with_files_(){
   # this was testing the functionality of ed while stripping out components of the editior itself, making sure its integrity was still intact
-  build_input="grep_.c"
+  build_input="src/grep.c"
   build_input_name="$build_input:t:r"
 
   echo "[+] Building "$build_input" from source...."
@@ -47,18 +47,10 @@ function testing_with_files_(){
 
 function testing_with_arguments_(){
   echo "[+] Building grep from source...."
-  clang -lm -g grep_.c -o grep 2> warning_error_logs.txt && succ_ || err_
+  clang -lm -g "src/grep.c" -o output 2> warning_error_logs.txt && succ_ || err_
   echo "[+] Running tests for grep_...."
-  ./grep "^yes" inputs/input.txt 
-  ./grep "^NO" inputs/input.txt another.txt
-  ./grep "\$container" inputs/input.txt another.txt
-  #echo "================================"
-  #./grep "^test" hello.txt input.txt
-  #echo "================================"
-  #./grep "^test" hello.txt input.txt another.txt
-  #echo "================================"
-  ##./grep "^test" *
+  ./output "^yes" ./input.txt 
+  ./output "^NO" ./input.txt another.txt
+  ./output "\$container" ./input.txt another.txt
 }
-
 testing_with_arguments_
-#rm ./grep
