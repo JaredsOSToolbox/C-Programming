@@ -5,7 +5,6 @@ typedef struct node node;
 struct node {
     int data;
     node* next;
-    node* prev;
 };
 
 typedef struct linked_list linked_list;
@@ -26,14 +25,11 @@ void linked_list_addback_node(linked_list* list, node* n);
 int linked_list_front(linked_list* list);
 int linked_list_back(linked_list* list);
 
-void linked_list_popfront(linked_list* list, node* n);
-void linked_list_popback(linked_list* list, node* n);
+void linked_list_popfront(linked_list* list);
+void linked_list_popback(linked_list* list);
 
 bool linked_list_isempty(linked_list* list);
 size_t linked_list_size(linked_list* list);
 void linked_list_clear(linked_list* list);
 
 void linked_list_print(linked_list* list);
-
-void linked_list_remove_selected(linked_list* list, node* n);
-node* linked_list_find_node(linked_list* list, int data);

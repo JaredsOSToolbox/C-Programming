@@ -1,12 +1,12 @@
 #include <stdio.h>
 
-char *strchr_(const char *s, int c){
-  while ((*s != (char)c) && *s++ != '\0'){}
+char *strchr_(const char *s, int c) {
+  while ((*s != (char)c) && *s++ != '\0') {
+  }
   return (char *)s;
 }
 
-
-int main(){
+int main() {
   char pattern = 'b';
   char string[] = "abc";
   printf("%s\n", strchr_(string, pattern));
